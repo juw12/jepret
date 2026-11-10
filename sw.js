@@ -1,6 +1,6 @@
 // Jepret service worker: makes the app installable and usable offline.
 // Photos are never cached or sent anywhere; only the app's own files are.
-const VERSION = "jepret-v7";
+const VERSION = "jepret-v8";
 const SHELL = [
   "./",
   "index.html",
@@ -8,6 +8,8 @@ const SHELL = [
   "app.js",
   "core.js",
   "vocab.js",
+  "describe.js",
+  "earn.js",
   "icon.svg",
   "icon-192.png",
   "icon-512.png",
@@ -33,7 +35,9 @@ self.addEventListener("activate", (event) => {
 // Same-origin GETs: answer from cache at once, refresh the cache in the background.
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) {
+  const url = new URL(request.url);
+  // The AI model (~90 MB) is cached separately by describe.js; keep it out of the app-shell cache.
+  if (request.method !== "GET" || url.origin !== self.location.origin || url.pathname.includes("/models/")) {
     return;
   }
   event.respondWith(

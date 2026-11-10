@@ -47,6 +47,7 @@
         <li><b>3</b><span data-i18n="s3">Download the CSV, upload photos + CSV to the stock site</span></li>
       </ol>
       <p class="tip" data-i18n="tip">Sony camera to phone (Imaging Edge Mobile or Creators' App)? Set the transfer size to Original first. The default 2M copies are about 2 MP, below Adobe Stock's 4 MP minimum.</p>
+      <p class="earn-link"><a href="#earn-panel" id="earn-jump" data-i18n="earnLink">Other ways to earn with your camera: local paid jobs ↓</a></p>
       <p class="honest" data-i18n="honest">Honest note: AI images flooded stock sites and earnings per photo fell. Jepret does not promise passive income; it removes the boring part so testing stock costs you little time.</p>
       <p class="getapp">
         <span data-i18n="getapp">Get the app:</span>
@@ -64,18 +65,42 @@
     <section id="review" hidden>
       <p class="hint" id="phone-hint" role="status" hidden></p>
       <div class="summary" id="summary"></div>
+      <div class="autowords panel">
+        <div class="cta">
+          <button id="fill-words" class="primary" type="button" data-i18n="fillWords">Fill in the words for me</button>
+          <label class="check"><input id="fill-auto" type="checkbox"> <span data-i18n="fillAuto">Do this by itself next time</span></label>
+        </div>
+        <p id="fill-status" class="fill-status" role="status"></p>
+        <p class="muted" data-i18n="fillNote">Recognises each scene on this device; photos are not uploaded. The first time it downloads about 90 MB, then it works offline. Check the words: the AI can be wrong.</p>
+      </div>
       <div class="groups" id="groups"></div>
       <div class="export panel">
         <h2 data-i18n="exportTitle">Export</h2>
         <p id="export-status" class="muted"></p>
         <div class="cta">
-          <button id="save-folder" class="primary" type="button" hidden data-i18n="saveFolder">Copy keepers + CSV to a folder</button>
+          <button id="save-folder" class="primary" type="button" hidden data-i18n="saveFolder">Copy keepers (words inside) + CSV to a folder</button>
+          <button id="share-photos" class="primary" type="button" hidden data-i18n="sharePhotos">Share keepers to an app</button>
           <span id="export-or" class="muted export-or" hidden data-i18n="exportOr">or one file at a time:</span>
           <button id="dl-adobe" class="primary" type="button">adobe_stock.csv</button>
           <button id="dl-shutter" class="secondary" type="button">shutterstock.csv</button>
           <button id="dl-list" class="secondary" type="button" data-i18n="keepList">Keeper list</button>
         </div>
+        <p class="muted" data-i18n="embedNote">Saved and shared photos carry their title and keywords inside the file, so Adobe Stock and Shutterstock fill them in when you upload.</p>
+        <p class="muted" data-i18n="uploadNote">Shutterstock: upload the shared or saved photos and the words are already filled in. Adobe Stock: upload the photos, then the CSV. Automatic upload from a PC: see tools/upload_stock.py in the README.</p>
+        <div class="proofs">
+          <label><span data-i18n="proofName">Name on proofs</span>
+            <input id="proof-name" type="text" maxlength="40" placeholder="Juwen Photo">
+          </label>
+          <button id="make-proofs" class="secondary" type="button" data-i18n="proofs">Client proofs (watermarked)</button>
+        </div>
       </div>
+    </section>
+
+    <section class="panel" id="earn-panel">
+      <details>
+        <summary id="earn-title">Earn offline with your camera</summary>
+        <div id="earn"></div>
+      </details>
     </section>
 
     <section class="panel">
@@ -88,7 +113,7 @@
 
   <footer class="foot">
     <span>Jepret · MIT licence · made in Batam</span>
-    <span class="muted" data-i18n="privacy">Nothing is uploaded. All analysis runs in this browser tab.</span>
+    <span class="muted" data-i18n="privacy">Nothing is uploaded. All analysis runs on this device.</span>
   </footer>
 
   <template id="group-template">

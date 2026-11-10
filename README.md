@@ -18,7 +18,9 @@ Jepret is for people with a mirrorless or DSLR camera, a full-time job and littl
 2. **Culling, automatic:** removes blurry shots and near-duplicate burst frames, flags photos under 4 MP (Adobe Stock's minimum).
 3. **Scenes, automatic:** photos shot close together in time are grouped, so you describe each scene once in 3-5 words.
 4. **Keywords:** your words are expanded with a stock keyword dictionary, location packs (Batam, Bali, Jakarta, ...) and facts from the image (orientation, colours, empty space for text). Up to 49 keywords and a title under 70 characters, editable.
-5. **Export:** `adobe_stock.csv` and `shutterstock.csv` in each site's CSV upload format, plus an optional copy of the keepers into a folder (Chrome/Edge).
+5. **Words, automatic if you want:** **Fill in the words for me** recognises each scene on your device (CLIP image model, about 90 MB once, then offline) and writes 1-3 scene words, with other guesses one tap away. Tick *Do this by itself next time* and it runs after every load. Check the words: it can be wrong.
+6. **Export:** `adobe_stock.csv` and `shutterstock.csv` in each site's CSV upload format, plus the keepers copied to a folder (Chrome/Edge) or handed to the phone's share sheet. Every exported photo carries its title and keywords **inside the file** (XMP + IPTC), so the stock sites fill them in on upload.
+7. **Client proofs:** watermarked 2000 px previews of the keepers, with your name, for paid local jobs.
 
 See [`sample/`](sample/) for real output made from the demo photos.
 
@@ -37,9 +39,33 @@ Open Jepret on the phone, tap **Choose photos** and select them from the gallery
 
 AI images now make up a large share of stock sites and earnings per photo have fallen (e.g. [PetaPixel, May 2025](https://petapixel.com/2025/05/22/almost-half-of-the-images-on-adobe-stock-are-ai-generated/)). Jepret does not promise passive income. It removes the boring part so testing stock costs you little time. Real local places, food and daily life are what still has a chance; the built-in shot list points you there.
 
+## Uploading: what is automatic and what stays with you
+
+| Step | Who |
+|---|---|
+| Culling, scenes, words, title, keywords, CSV, words inside each photo | Jepret |
+| Phone: share keepers to Drive, WhatsApp or a stock contributor app | You tap Share (10 photos per tap) |
+| PC: upload a saved folder to Shutterstock (FTPS) and Adobe Stock (SFTP) | `python tools/upload_stock.py <folder> --shutterstock --adobe` (add `--watch` to keep uploading new photos) |
+| Create the contributor accounts, ID check, tax form | You, once |
+| Press **Submit** on Shutterstock; confirm you own the photos and have releases | You, every batch (the sites require it) |
+| Adobe Stock SFTP | Only after Adobe enables it for your account; until then upload in the browser |
+
+`tools/upload_stock.py` uses Shutterstock's `ftps.shutterstock.com:21` (explicit TLS) and Adobe's `sftp.contributor.adobestock.com:22`
+(needs `pip install paramiko`). Credentials come from `JEPRET_SHUTTERSTOCK_USER/PASSWORD` and `JEPRET_ADOBE_SFTP_ID/PASSWORD` or a prompt;
+a `uploaded.txt` log in the folder stops double uploads. The dry run is tested; real uploads have not been tested without an account.
+
+## Earn offline with the same camera
+
+Stock pays little per photo now, so the app also lists local paid jobs with Indonesian rate ranges (2024-25 listings), a6400 settings and a
+ready WhatsApp message for each: product photos for Shopee/Tokopedia sellers (Rp 50k-500k per photo, packages from about Rp 299k for 10),
+menu photos for GoFood/GrabFood (Rp 500k-1.2 jt per session), wisuda and portraits (Rp 300k-3 jt), small events (listings Rp 500k-3 jt per hour)
+and kos/property listings (no published rates found; Rp 150k-300k per room is our assumption). Client proofs make the watermarked previews.
+
 ## Privacy
 
-Everything runs in the browser tab: photo analysis uses the canvas API on your computer. No account, no server, no upload.
+Everything runs on your device: photo analysis uses the canvas API, and the scene recogniser runs in the page with onnxruntime-web.
+The only downloads are the app itself, the recogniser runtime (jsDelivr) and its model (this site), once. Photos are never uploaded by Jepret;
+uploads happen only when you share them or run `tools/upload_stock.py`.
 
 ## How the checks work
 
@@ -57,13 +83,16 @@ python -m http.server 8000      # then open http://localhost:8000
                                  # tests: http://localhost:8000/test.html
 ```
 
-`core.js` holds the pure logic (tested in `test.html`), `vocab.js` the keyword dictionary, locations and shot list, `app.js` the UI.
+`core.js` holds the pure logic (tested in `test.html`, including the XMP/IPTC writer and scene-word picking), `vocab.js` the keyword dictionary,
+locations and shot list, `describe.js` the on-device recogniser, `earn.js` the local-jobs cards, `app.js` the UI.
+The recogniser model (`models/`, CLIP ViT-B/32 image encoder, 8-bit) and its word list are built by `.github/workflows/clip-model.yml`
+running `tools/build_clip.py`, which also writes `models/selftest.json` from six Wikimedia Commons test photos.
 `sw.js` caches the app so it works offline. `app/` wraps the same files into `Jepret.exe` with [Tauri 2](https://tauri.app) (WebView2);
 GitHub Actions (`.github/workflows/windows.yml`) builds it on every change and attaches it to the latest release.
 To build locally: install Rust, then run `./app/build.ps1`.
 
-## Not in v1 (on purpose)
+## Not included (on purpose)
 
-Paid plans, automatic upload to stock sites, video keywording, AI image recognition, face search for events, a store-listed (Play Store) Android app.
+Paid plans, uploads without your final Submit (the sites do not allow it), video keywording, face search for events, a store-listed (Play Store) Android app.
 
 MIT licence. Made in Batam.

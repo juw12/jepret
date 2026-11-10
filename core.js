@@ -436,3 +436,237 @@ export function looksLikePhoneCopies(photos) {
   const copies = photos.filter((photo) => photo.megapixels >= low && photo.megapixels < high);
   return copies.length >= 2 && copies.length >= photos.length / 2;
 }
+
+
+// ---------------------------------------------------------------- embedded metadata (XMP)
+
+function xmlEscape(text) {
+  return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** XMP packet with title, description and keywords; Adobe Stock and Shutterstock read these on upload. */
+export function xmpPacket({ title, description, keywords }) {
+  const items = (keywords || []).map((word) => `<rdf:li>${xmlEscape(word)}</rdf:li>`).join("");
+  const alt = (value) => `<rdf:Alt><rdf:li xml:lang="x-default">${xmlEscape(value)}</rdf:li></rdf:Alt>`;
+  return `<?xpacket begin="\uFEFF" id="W5M0MpCehiHzreSzNTczkc9d"?>`
+    + `<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">`
+    + `<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:photoshop="http://ns.adobe.com/photoshop/1.0/">`
+    + `<dc:title>${alt(title || "")}</dc:title><dc:description>${alt(description || title || "")}</dc:description>`
+    + `<dc:subject><rdf:Bag>${items}</rdf:Bag></dc:subject><photoshop:Headline>${xmlEscape(title || "")}</photoshop:Headline>`
+    + `</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="w"?>`;
+}
+
+const XMP_HEADER = "http://ns.adobe.com/xap/1.0/\0";
+
+/** UTF-8 bytes of a string (no TextEncoder needed, so it also runs in plain JS engines). */
+export function utf8(text) {
+  const bytes = [];
+  for (const char of String(text)) {
+    const code = char.codePointAt(0);
+    if (code < 0x80) {
+      bytes.push(code);
+    } else if (code < 0x800) {
+      bytes.push(0xc0 | (code >> 6), 0x80 | (code & 63));
+    } else if (code < 0x10000) {
+      bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 63), 0x80 | (code & 63));
+    } else {
+      bytes.push(0xf0 | (code >> 18), 0x80 | ((code >> 12) & 63), 0x80 | ((code >> 6) & 63), 0x80 | (code & 63));
+    }
+  }
+  return Uint8Array.from(bytes);
+}
+
+/** Decode UTF-8 bytes back to a string. */
+export function fromUtf8(bytes) {
+  let text = "";
+  for (let i = 0; i < bytes.length;) {
+    const lead = bytes[i];
+    let code;
+    let size;
+    if (lead < 0x80) {
+      code = lead;
+      size = 1;
+    } else if (lead < 0xe0) {
+      code = ((lead & 31) << 6) | (bytes[i + 1] & 63);
+      size = 2;
+    } else if (lead < 0xf0) {
+      code = ((lead & 15) << 12) | ((bytes[i + 1] & 63) << 6) | (bytes[i + 2] & 63);
+      size = 3;
+    } else {
+      code = ((lead & 7) << 18) | ((bytes[i + 1] & 63) << 12) | ((bytes[i + 2] & 63) << 6) | (bytes[i + 3] & 63);
+      size = 4;
+    }
+    // Broken or truncated sequences become U+FFFD instead of throwing.
+    const valid = i + size <= bytes.length && code <= 0x10ffff && !(code >= 0xd800 && code <= 0xdfff);
+    text += valid ? String.fromCodePoint(code) : "\ufffd";
+    i += valid ? size : 1;
+  }
+  return text;
+}
+
+/** Cut a string so its UTF-8 form fits maxBytes, without splitting a character. */
+function fitBytes(text, maxBytes) {
+  let out = "";
+  let used = 0;
+  for (const char of String(text)) {
+    const size = utf8(char).length;
+    if (used + size > maxBytes) break;
+    out += char;
+    used += size;
+  }
+  return out;
+}
+
+const PHOTOSHOP_HEADER = "Photoshop 3.0\0";
+
+/**
+ * IPTC-IIM block (APP13) with title, headline, caption and keywords in UTF-8.
+ * Shutterstock and many older tools read IPTC rather than XMP, so both are written.
+ */
+export function iptcSegment({ title, description, keywords }) {
+  const datasets = [];
+  const dataset = (record, id, value) => {
+    const data = typeof value === "string" ? utf8(value) : Uint8Array.from(value);
+    datasets.push(Uint8Array.from([0x1c, record, id, data.length >> 8, data.length & 0xff]), data);
+  };
+  dataset(1, 90, [0x1b, 0x25, 0x47]); // coded character set: UTF-8
+  dataset(2, 0, [0, 4]); // record version
+  dataset(2, 5, fitBytes(title || "", 64)); // object name
+  dataset(2, 105, fitBytes(title || "", 256)); // headline
+  dataset(2, 120, fitBytes(description || title || "", 2000)); // caption / description
+  (keywords || []).forEach((word) => dataset(2, 25, fitBytes(word, 64)));
+  const iim = concatBytes(datasets);
+  const padded = iim.length % 2 ? concatBytes([iim, Uint8Array.of(0)]) : iim;
+  const resource = concatBytes([
+    utf8("8BIM"),
+    Uint8Array.of(0x04, 0x04, 0, 0),
+    Uint8Array.of((iim.length >>> 24) & 0xff, (iim.length >>> 16) & 0xff, (iim.length >>> 8) & 0xff, iim.length & 0xff),
+    padded,
+  ]);
+  const body = concatBytes([utf8(PHOTOSHOP_HEADER), resource]);
+  const length = body.length + 2;
+  if (length > 0xffff) throw new Error("metadata too long");
+  return concatBytes([Uint8Array.of(0xff, 0xed, length >> 8, length & 0xff), body]);
+}
+
+function concatBytes(parts) {
+  const out = new Uint8Array(parts.reduce((sum, part) => sum + part.length, 0));
+  let cursor = 0;
+  for (const part of parts) {
+    out.set(part, cursor);
+    cursor += part.length;
+  }
+  return out;
+}
+
+function startsWith(bytes, offset, prefix) {
+  return prefix.every((value, i) => bytes[offset + i] === value);
+}
+
+/** Read title, caption and keywords back from an IPTC (APP13) block; null if none. */
+export function readIptc(jpeg) {
+  const bytes = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
+  const header = utf8(PHOTOSHOP_HEADER);
+  let offset = 2;
+  while (offset + 4 <= bytes.length && bytes[offset] === 0xff && bytes[offset + 1] >= 0xe0 && bytes[offset + 1] <= 0xef) {
+    const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+    if (bytes[offset + 1] === 0xed && startsWith(bytes, offset + 4, header)) {
+      const result = { title: "", headline: "", caption: "", keywords: [] };
+      let cursor = offset + 4 + header.length + 12; // 8BIM + id + empty name + size
+      const end = offset + 2 + length;
+      while (cursor + 5 <= end && bytes[cursor] === 0x1c) {
+        const record = bytes[cursor + 1];
+        const id = bytes[cursor + 2];
+        const size = (bytes[cursor + 3] << 8) | bytes[cursor + 4];
+        const value = fromUtf8(bytes.subarray(cursor + 5, cursor + 5 + size));
+        if (record === 2 && id === 5) result.title = value;
+        if (record === 2 && id === 105) result.headline = value;
+        if (record === 2 && id === 120) result.caption = value;
+        if (record === 2 && id === 25) result.keywords.push(value);
+        cursor += 5 + size;
+      }
+      return result;
+    }
+    offset += 2 + length;
+  }
+  return null;
+}
+
+/**
+ * Return a copy of a JPEG with XMP and IPTC blocks (title, description, keywords) placed after the
+ * existing APPn segments. Earlier XMP/IPTC blocks are replaced; image data and EXIF are untouched.
+ */
+export function embedXmp(jpeg, meta) {
+  const bytes = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
+  if (bytes[0] !== 0xff || bytes[1] !== 0xd8) throw new Error("not a JPEG");
+  const header = utf8(XMP_HEADER);
+  const photoshop = utf8(PHOTOSHOP_HEADER);
+  const segments = [];
+  let offset = 2;
+  while (offset + 4 <= bytes.length && bytes[offset] === 0xff && bytes[offset + 1] >= 0xe0 && bytes[offset + 1] <= 0xef) {
+    const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+    const end = offset + 2 + length;
+    const isXmp = bytes[offset + 1] === 0xe1 && startsWith(bytes, offset + 4, header);
+    const isIptc = bytes[offset + 1] === 0xed && startsWith(bytes, offset + 4, photoshop);
+    if (!isXmp && !isIptc) segments.push(bytes.subarray(offset, end));
+    offset = end;
+  }
+  const payload = utf8(xmpPacket(meta));
+  const segmentLength = 2 + header.length + payload.length;
+  if (segmentLength > 0xffff) throw new Error("metadata too long");
+  const xmp = new Uint8Array(2 + segmentLength);
+  xmp.set([0xff, 0xe1, segmentLength >> 8, segmentLength & 0xff], 0);
+  xmp.set(header, 4);
+  xmp.set(payload, 4 + header.length);
+  return concatBytes([Uint8Array.of(0xff, 0xd8), ...segments, xmp, iptcSegment(meta), bytes.subarray(offset)]);
+}
+
+/** Read back the XMP packet text from a JPEG (null if none). */
+export function readXmp(jpeg) {
+  const bytes = jpeg instanceof Uint8Array ? jpeg : new Uint8Array(jpeg);
+  const header = utf8(XMP_HEADER);
+  let offset = 2;
+  while (offset + 4 <= bytes.length && bytes[offset] === 0xff && bytes[offset + 1] >= 0xe0 && bytes[offset + 1] <= 0xef) {
+    const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
+    if (bytes[offset + 1] === 0xe1 && startsWith(bytes, offset + 4, header)) {
+      return fromUtf8(bytes.subarray(offset + 4 + header.length, offset + 2 + length));
+    }
+    offset += 2 + length;
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------- scene words from the on-device recogniser
+
+/**
+ * Turn image embeddings (one or more frames of a scene) into 1-3 scene words.
+ * labelEmbeddings are unit vectors; CLIP's logit scale of 100 then a softmax gives a share per label.
+ * A label is used when it holds at least minShare of the probability; the best label is always used
+ * if it reaches floorShare, so a clear subject still gets a word.
+ */
+export function pickSceneWords(imageEmbeddings, labels, labelEmbeddings, { maxWords = 3, minShare = 0.12, floorShare = 0.05 } = {}) {
+  const dims = labelEmbeddings[0].length;
+  const mean = new Float64Array(dims);
+  for (const embed of imageEmbeddings) {
+    let norm = 0;
+    for (let i = 0; i < dims; i += 1) norm += embed[i] * embed[i];
+    norm = Math.sqrt(norm) || 1;
+    for (let i = 0; i < dims; i += 1) mean[i] += embed[i] / norm;
+  }
+  let meanNorm = 0;
+  for (let i = 0; i < dims; i += 1) meanNorm += mean[i] * mean[i];
+  meanNorm = Math.sqrt(meanNorm) || 1;
+  const logits = labelEmbeddings.map((row) => {
+    let dot = 0;
+    for (let i = 0; i < dims; i += 1) dot += row[i] * mean[i];
+    return (100 * dot) / meanNorm;
+  });
+  const top = Math.max(...logits);
+  const exps = logits.map((value) => Math.exp(value - top));
+  const sum = exps.reduce((a, b) => a + b, 0);
+  const ranked = exps.map((value, index) => ({ label: labels[index], share: value / sum }))
+    .sort((a, b) => b.share - a.share);
+  const chosen = ranked.filter((item) => item.share >= minShare).slice(0, maxWords);
+  if (!chosen.length && ranked[0].share >= floorShare) chosen.push(ranked[0]);
+  return { words: chosen.map((item) => item.label), ranked: ranked.slice(0, 5) };
+}

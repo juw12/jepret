@@ -6,7 +6,7 @@ $dist = Join-Path $PSScriptRoot "dist"
 if (Test-Path $dist) { Remove-Item $dist -Recurse -Force }
 New-Item -ItemType Directory -Path $dist | Out-Null
 $files = @(
-    "index.html", "styles.css", "app.js", "core.js", "vocab.js",
+    "index.html", "styles.css", "app.js", "core.js", "vocab.js", "describe.js", "earn.js",
     "icon.svg", "icon-192.png", "icon-512.png", "icon-maskable-512.png",
     "apple-touch-icon.png", "manifest.webmanifest"
 )
