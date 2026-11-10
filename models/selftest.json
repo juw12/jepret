@@ -1,0 +1,55 @@
+{
+ "vision_inputs": [
+  "pixel_values"
+ ],
+ "vision_outputs": [
+  "image_embeds"
+ ],
+ "labels": 107,
+ "samples": {
+  "Brachydiplax_chalybea_female_06685.jpg": [
+   [
+    "dragonfly",
+    0.937
+   ],
+   [
+    "insect",
+    0.039
+   ],
+   [
+    "macro",
+    0.005
+   ],
+   [
+    "butterfly",
+    0.004
+   ],
+   [
+    "spider",
+    0.003
+   ]
+  ],
+  "Butterfly_pea_%28_Centrosema_pubescens%2901569.jpg": [
+   [
+    "flower",
+    0.382
+   ],
+   [
+    "plant",
+    0.255
+   ],
+   [
+    "garden",
+    0.054
+   ],
+   [
+    "butterfly",
+    0.05
+   ],
+   [
+    "mangrove",
+    0.028
+   ]
+  ]
+ }
+}
