@@ -32,6 +32,7 @@ const TEXT = {
     people: "Someone's face can be recognised (no model release, so these go in as editorial)", title: "Title", keywords: "Keywords",
     reading: "Reading photo", of: "of", scene: "Scene", photos: "photos", photo: "photo", kept: "kept",
     noKeepers: "No keepers in this scene. Click a photo to keep it and fill in its words.",
+    exportOr: "or one file at a time:",
     saveHint: "You will be asked to allow saving, sometimes twice: choose Save changes, then Allow.",
     saveFailed: "Could not save to that folder. Try another folder, or use the download buttons above.",
     saved: (n) => `${n} photos + 2 CSV files saved.`,
@@ -60,6 +61,7 @@ const TEXT = {
     people: "Ada wajah orang yang jelas (tanpa izin model, jadi dikirim sebagai editorial)", title: "Judul", keywords: "Kata kunci",
     reading: "Membaca foto", of: "dari", scene: "Adegan", photos: "foto", photo: "foto", kept: "dipilih",
     noKeepers: "Tidak ada foto terpilih di adegan ini. Klik foto untuk menyimpannya dan isi kata-katanya.",
+    exportOr: "atau satu file per satu:",
     saveHint: "Kamu akan diminta izin menyimpan, kadang dua kali: pilih Save changes, lalu Allow.",
     saveFailed: "Gagal menyimpan ke folder itu. Coba folder lain, atau pakai tombol unduh di atas.",
     saved: (n) => `${n} foto + 2 file CSV tersimpan.`,
@@ -537,7 +539,10 @@ function init() {
     download("jepret_list.txt", lines.join("\r\n"), "text/plain;charset=utf-8");
   });
   if ("showDirectoryPicker" in window) {
+    // One obvious main action where the browser can write a folder; single files stay as a fallback.
     $("#save-folder").hidden = false;
+    $("#export-or").hidden = false;
+    $("#dl-adobe").className = "secondary";
     $("#save-folder").addEventListener("click", () => {
     $("#export-status").textContent = t("saveHint");
     saveToFolder().catch((error) => {

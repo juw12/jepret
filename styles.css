@@ -104,3 +104,8 @@ details h4 { margin: 16px 0 4px; }
 .empty-note { margin: 10px 0 0; }
 
 #blur-note { margin: -4px 0 14px; }
+
+.export-or {
+  align-self: center;
+  font-size: 0.9rem;
+}
