@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jepret - SD card to stock upload files</title>
+  <meta name="description" content="Free, open-source app: pick your camera SD card, Jepret removes blurry and duplicate shots, writes titles and keywords and makes Adobe Stock and Shutterstock upload files. Photos never leave your computer.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="bar">
+    <a class="brand" href="./">
+      <img src="icon.svg" alt="" width="28" height="28">
+      <span>Jepret</span>
+    </a>
+    <nav class="bar-actions">
+      <button id="lang" class="ghost" type="button" aria-label="Switch language">ID</button>
+      <button id="theme" class="ghost" type="button" aria-label="Switch theme">◐</button>
+      <a class="ghost" href="https://github.com/juw12/jepret" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="start" class="hero">
+      <p class="eyebrow" data-i18n="eyebrow">Free · open source · photos stay on your computer</p>
+      <h1 data-i18n="headline">Camera sitting idle? SD card in, stock upload files out.</h1>
+      <p class="lead" data-i18n="lead">Jepret removes blurry and duplicate shots, writes titles and keywords, and makes the CSV files Adobe Stock and Shutterstock ask for.</p>
+      <div class="cta">
+        <label class="primary" for="picker">
+          <span data-i18n="pick">Choose SD card folder</span>
+          <input id="picker" type="file" webkitdirectory multiple accept="image/jpeg">
+        </label>
+        <button id="demo" class="secondary" type="button" data-i18n="demo">Try with demo photos</button>
+      </div>
+      <ol class="steps">
+        <li><b>1</b><span data-i18n="s1">Pick the DCIM folder on your card</span></li>
+        <li><b>2</b><span data-i18n="s2">Check the picks, type 3-5 words per scene</span></li>
+        <li><b>3</b><span data-i18n="s3">Download the CSV, upload photos + CSV to the stock site</span></li>
+      </ol>
+      <p class="honest" data-i18n="honest">Honest note: AI images flooded stock sites and earnings per photo fell. Jepret does not promise passive income; it removes the boring part so testing stock costs you little time.</p>
+    </section>
+
+    <section id="progress" class="panel" hidden>
+      <p id="progress-text">Reading photos…</p>
+      <div class="meter"><div id="progress-bar"></div></div>
+    </section>
+
+    <section id="review" hidden>
+      <div class="summary" id="summary"></div>
+      <div class="groups" id="groups"></div>
+      <div class="export panel">
+        <h2 data-i18n="exportTitle">Export</h2>
+        <p id="export-status" class="muted"></p>
+        <div class="cta">
+          <button id="dl-adobe" class="primary" type="button">adobe_stock.csv</button>
+          <button id="dl-shutter" class="secondary" type="button">shutterstock.csv</button>
+          <button id="dl-list" class="secondary" type="button" data-i18n="keepList">Keeper list</button>
+          <button id="save-folder" class="secondary" type="button" hidden data-i18n="saveFolder">Copy keepers + CSV to a folder</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <details>
+        <summary data-i18n="shotTitle">Shot list: what to shoot this week</summary>
+        <div id="shots"></div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Jepret · MIT licence · made in Batam</span>
+    <span class="muted" data-i18n="privacy">Nothing is uploaded. All analysis runs in this browser tab.</span>
+  </footer>
+
+  <template id="group-template">
+    <article class="group panel">
+      <header class="group-head">
+        <h3></h3>
+        <span class="muted group-meta"></span>
+      </header>
+      <div class="thumbs"></div>
+      <div class="fields">
+        <label><span data-i18n="describe">Describe the scene (3-5 words)</span>
+          <input class="words" type="text" placeholder="barelang bridge sunrise">
+        </label>
+        <label><span data-i18n="location">Location</span>
+          <select class="location"></select>
+        </label>
+        <label><span data-i18n="category">Adobe category</span>
+          <select class="category"></select>
+        </label>
+        <label class="check"><input class="people" type="checkbox"> <span data-i18n="people">Recognisable people in these photos</span></label>
+      </div>
+      <div class="output">
+        <label><span data-i18n="title">Title</span><input class="title" type="text" maxlength="70"></label>
+        <label><span data-i18n="keywords">Keywords</span><textarea class="keywords" rows="3"></textarea></label>
+        <p class="muted kw-count"></p>
+      </div>
+    </article>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+These two files were produced by Jepret itself from the built-in demo photos (button "Try with demo photos"), scenes described as "sunrise beach" and "night market street food" in Batam. They show the exact upload format.

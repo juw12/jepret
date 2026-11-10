@@ -1,0 +1,75 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Jepret tests</title></head>
+<body><pre id="out">running</pre>
+<script type="module">
+import * as core from "./core.js";
+import { DICTIONARY, LOCATIONS } from "./vocab.js";
+const results = [];
+const check = (name, condition) => results.push(`${condition ? "PASS" : "FAIL"} ${name}`);
+
+const w = 64;
+const h = 64;
+const noisy = new Float32Array(w * h).map((_, i) => (i * 7919) % 255);
+const flat = new Float32Array(w * h).fill(128);
+check("noise is sharper than flat", core.sharpness(noisy, w, h).score > core.sharpness(flat, w, h).score);
+check("flat image is all copy space", core.sharpness(flat, w, h).flatShare === 1);
+
+const ramp = new Float32Array(72).map((_, i) => i % 9);
+const hashA = core.differenceHash(ramp);
+check("ramp hash has all bits set", core.hammingDistance(hashA, 0n) === 64);
+check("identical hashes distance 0", core.hammingDistance(hashA, hashA) === 0);
+
+const photos = [
+  { name: "a.jpg", megapixels: 24, sharpness: 900, hash: 0n },
+  { name: "b.jpg", megapixels: 24, sharpness: 400, hash: 1n },
+  { name: "c.jpg", megapixels: 24, sharpness: 5, hash: 2n ** 40n - 1n },
+  { name: "d.jpg", megapixels: 1, sharpness: 800, hash: 2n ** 63n },
+  { name: "e.jpg", megapixels: 24, sharpness: 700, hash: 2n ** 64n - 1n },
+];
+core.judge(photos);
+check("sharp first frame kept", photos[0].status === "keep");
+check("near-duplicate rejected", photos[1].status === "duplicate");
+check("blurry rejected", photos[2].status === "blurry");
+check("small rejected", photos[3].status === "small");
+check("different scene kept", photos[4].status === "keep");
+
+const scenes = [
+  { name: "s1.jpg", megapixels: 24, sharpness: 900, hash: 0n, time: 0 },
+  { name: "s2.jpg", megapixels: 24, sharpness: 950, hash: 1n, time: 45 * 60000 },
+];
+core.judge(scenes);
+check("similar photos 45 min apart are not duplicates", scenes.every((p) => p.status === "keep"));
+
+const groups = core.groupByTime([{ time: 0 }, { time: 60000 }, { time: 60000 * 30 }]);
+check("two scenes from 30 min gap", groups.length === 2 && groups[0].photos.length === 2);
+
+const meta = core.buildMetadata({ words: "barelang bridge sunrise", locationKey: "batam", people: false, orientation: "horizontal", colours: ["orange"], copySpace: true }, DICTIONARY, LOCATIONS);
+check("title has location", meta.title === "Barelang bridge sunrise in Batam, Indonesia");
+check("user words first", meta.keywords[0] === "barelang" && meta.keywords[1] === "bridge");
+check("location keywords added", meta.keywords.includes("riau islands"));
+check("dictionary expansion", meta.keywords.includes("golden hour") && meta.keywords.includes("architecture"));
+check("no people tags", meta.keywords.includes("no people"));
+check("copy space tag", meta.keywords.includes("copy space"));
+check("outdoors tag", meta.keywords.includes("outdoors"));
+check("keywords unique and <= 49", new Set(meta.keywords).size === meta.keywords.length && meta.keywords.length <= 49);
+check("category from words", [2, 11].includes(meta.category));
+const food = core.buildMetadata({ words: "nasi goreng street food", locationKey: "", people: true, orientation: "vertical", colours: [] }, DICTIONARY, LOCATIONS);
+check("food category 7", food.category === 7);
+check("phrase consumes its words", !food.keywords.includes("traffic") && !food.keywords.includes("road"));
+check("multi-word entries matched", food.keywords.includes("fried rice") && food.keywords.includes("hawker"));
+
+const items = [{ file: "DSC01.JPG", title: 'Bridge, "sunrise"', keywords: meta.keywords, category: meta.category, editorial: false, shutterstockCategories: ["Nature"] }];
+const adobe = core.adobeCsv(items);
+check("adobe header", adobe.startsWith("Filename,Title,Keywords,Category,Releases\r\n"));
+check("csv quotes escaped", adobe.includes('"Bridge, ""sunrise"""'));
+const shutter = core.shutterstockCsv(items);
+check("shutterstock header", shutter.startsWith("Filename,Description,Keywords,Categories,Editorial,Mature content,illustration"));
+check("valid item has no problems", core.validateItem(items[0]).length === 0);
+check("long filename flagged", core.validateItem({ ...items[0], file: "x".repeat(31) + ".jpg" }).length === 1);
+
+const failed = results.filter((line) => line.startsWith("FAIL")).length;
+document.getElementById("out").textContent = results.join("\n") + `\nSUMMARY ${results.length - failed}/${results.length} passed`;
+if (location.search.includes("report")) {
+  fetch("/report", { method: "POST", body: document.getElementById("out").textContent });
+}
+</script></body></html>

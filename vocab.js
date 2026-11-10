@@ -1,0 +1,130 @@
+// Keyword dictionary: the words a user types expand into related stock keywords.
+// category = Adobe Stock category number, outdoor = adds "outdoors".
+
+const entry = (category, related, outdoor = false) => ({ category, related, outdoor });
+
+export const DICTIONARY = {
+  // places and travel
+  "bridge": entry(2, ["architecture", "infrastructure", "landmark", "structure", "engineering", "construction", "travel destination"], true),
+  "beach": entry(11, ["sea", "ocean", "sand", "coast", "shore", "tropical", "vacation", "summer", "paradise", "travel"], true),
+  "sea": entry(11, ["ocean", "water", "horizon", "seascape", "blue", "nature"], true),
+  "island": entry(11, ["tropical", "ocean", "travel", "paradise", "nature", "archipelago"], true),
+  "harbor": entry(20, ["port", "boat", "ship", "dock", "pier", "maritime", "transport"], true),
+  "harbour": entry(20, ["port", "boat", "ship", "dock", "pier", "maritime", "transport"], true),
+  "ferry": entry(20, ["boat", "ship", "sea", "transport", "travel", "passenger", "maritime"], true),
+  "boat": entry(20, ["water", "sea", "fishing", "traditional", "transport", "maritime"], true),
+  "fishing village": entry(15, ["village", "stilt house", "fishermen", "traditional", "coastal", "community", "culture"], true),
+  "kelong": entry(15, ["fishing platform", "stilt house", "sea", "traditional", "fishing", "culture"], true),
+  "mangrove": entry(5, ["forest", "wetland", "ecosystem", "nature", "environment", "conservation", "tropical"], true),
+  "jungle": entry(5, ["rainforest", "forest", "tropical", "green", "nature", "trees"], true),
+  "waterfall": entry(11, ["water", "nature", "forest", "landscape", "flowing", "travel"], true),
+  "mountain": entry(11, ["landscape", "peak", "hiking", "nature", "scenic", "volcano"], true),
+  "rice field": entry(11, ["paddy", "agriculture", "farm", "green", "rural", "terrace", "asia"], true),
+  "city": entry(2, ["urban", "skyline", "buildings", "cityscape", "downtown", "modern"], true),
+  "skyline": entry(2, ["city", "buildings", "urban", "cityscape", "architecture"], true),
+  "street": entry(2, ["road", "urban", "city life", "daily life", "traffic"], true),
+  "traffic": entry(20, ["cars", "motorbikes", "road", "rush hour", "urban", "transport"], true),
+  "motorbike": entry(20, ["scooter", "motorcycle", "transport", "street", "traffic", "asia"], true),
+  "mosque": entry(15, ["islam", "religion", "architecture", "faith", "worship", "landmark"], true),
+  "temple": entry(15, ["religion", "architecture", "culture", "spiritual", "heritage", "landmark"], true),
+  "market": entry(12, ["traditional market", "vendor", "stall", "shopping", "local", "fresh produce"], true),
+  "night market": entry(7, ["street food", "stall", "night", "vendor", "local", "lights"], true),
+  "industrial": entry(10, ["industry", "factory", "manufacturing", "business", "economy"], true),
+  "factory": entry(10, ["industry", "manufacturing", "production", "industrial", "economy"], true),
+  "container": entry(10, ["cargo", "shipping", "logistics", "port", "export", "trade"], true),
+  "crane": entry(10, ["construction", "port", "industrial", "logistics", "heavy machinery"], true),
+
+  // sky and weather
+  "sunrise": entry(11, ["dawn", "morning", "golden hour", "sun", "sky", "orange", "early morning"], true),
+  "sunset": entry(11, ["dusk", "evening", "golden hour", "sun", "sky", "orange", "twilight"], true),
+  "blue hour": entry(11, ["twilight", "dusk", "evening", "lights", "night", "sky"], true),
+  "night": entry(11, ["dark", "lights", "evening", "illuminated", "nightscape"], true),
+  "rain": entry(5, ["rainy", "weather", "wet", "monsoon", "drops", "tropical rain"], true),
+  "storm": entry(5, ["clouds", "dramatic sky", "weather", "thunderstorm", "rain"], true),
+  "clouds": entry(11, ["sky", "cloudscape", "weather", "atmosphere"], true),
+
+  // food and drink
+  "food": entry(7, ["meal", "dish", "cuisine", "delicious", "eating", "gourmet"]),
+  "street food": entry(7, ["food stall", "vendor", "local food", "snack", "hawker", "cuisine", "asian food"], true),
+  "nasi goreng": entry(7, ["fried rice", "indonesian food", "rice", "asian cuisine", "dish", "meal"]),
+  "satay": entry(7, ["sate", "grilled", "skewer", "meat", "indonesian food", "barbecue"]),
+  "sate": entry(7, ["satay", "grilled", "skewer", "meat", "indonesian food", "barbecue"]),
+  "rendang": entry(7, ["beef", "curry", "indonesian food", "padang", "spicy", "dish"]),
+  "sambal": entry(7, ["chili", "chili paste", "spicy", "condiment", "indonesian food", "sauce"]),
+  "tempeh": entry(7, ["tempe", "soy", "vegan", "protein", "indonesian food", "healthy"]),
+  "noodles": entry(7, ["mie", "noodle soup", "asian food", "bowl", "meal"]),
+  "seafood": entry(7, ["fish", "shrimp", "crab", "fresh", "ocean", "dish"]),
+  "fruit": entry(7, ["fresh", "healthy", "tropical fruit", "organic", "vitamin"]),
+  "durian": entry(7, ["tropical fruit", "fruit", "exotic", "asia", "king of fruits"]),
+  "chili": entry(7, ["chilli", "pepper", "spicy", "red", "ingredient", "hot"]),
+  "spices": entry(7, ["ingredients", "herbs", "seasoning", "aromatic", "cooking"]),
+  "coffee": entry(4, ["cup", "drink", "beverage", "cafe", "espresso", "morning", "caffeine"]),
+  "tea": entry(4, ["cup", "drink", "beverage", "hot drink", "relax"]),
+  "cooking": entry(7, ["kitchen", "preparing food", "recipe", "home cooking", "chef"]),
+
+  // work and lifestyle
+  "laptop": entry(19, ["computer", "technology", "work", "online", "remote work", "office"]),
+  "phone": entry(19, ["smartphone", "mobile", "technology", "communication", "social media"]),
+  "hands": entry(12, ["close-up", "human hand", "detail", "action"]),
+  "desk": entry(3, ["workspace", "office", "work", "business", "flat lay"]),
+  "money": entry(3, ["rupiah", "cash", "finance", "currency", "banknotes", "economy", "savings"]),
+  "rupiah": entry(3, ["money", "indonesian currency", "cash", "banknotes", "finance"]),
+  "tools": entry(10, ["equipment", "workshop", "repair", "diy", "engineering"]),
+  "electronics": entry(19, ["circuit", "technology", "components", "hardware", "engineering"]),
+  "batik": entry(15, ["textile", "fabric", "pattern", "indonesian culture", "traditional", "craft"]),
+  "plant": entry(14, ["leaf", "green", "nature", "botanical", "foliage"]),
+  "monstera": entry(14, ["leaf", "tropical plant", "houseplant", "green", "botanical"]),
+  "flower": entry(14, ["bloom", "petals", "floral", "nature", "colorful"]),
+  "cat": entry(1, ["pet", "animal", "kitten", "cute", "domestic"]),
+  "bird": entry(1, ["animal", "wildlife", "nature", "feathers"]),
+  "running": entry(18, ["run", "fitness", "sport", "race", "healthy lifestyle", "exercise"], true),
+  "fun run": entry(18, ["race", "running", "marathon", "event", "sport", "fitness"], true),
+  "cycling": entry(18, ["bicycle", "bike", "sport", "fitness", "exercise"], true),
+  "texture": entry(8, ["background", "pattern", "surface", "abstract", "backdrop"]),
+  "background": entry(8, ["backdrop", "texture", "copy space", "abstract", "wallpaper"]),
+};
+
+export const LOCATIONS = {
+  "": { label: "", words: [] },
+  "batam": { label: "Batam, Indonesia", words: ["batam", "riau islands", "indonesia", "southeast asia", "asia"] },
+  "barelang": { label: "Batam, Indonesia", words: ["barelang", "batam", "riau islands", "indonesia", "southeast asia"] },
+  "bintan": { label: "Bintan, Indonesia", words: ["bintan", "riau islands", "indonesia", "southeast asia", "asia"] },
+  "jakarta": { label: "Jakarta, Indonesia", words: ["jakarta", "java", "indonesia", "capital city", "southeast asia"] },
+  "bandung": { label: "Bandung, Indonesia", words: ["bandung", "west java", "java", "indonesia", "southeast asia"] },
+  "yogyakarta": { label: "Yogyakarta, Indonesia", words: ["yogyakarta", "jogja", "java", "indonesia", "southeast asia"] },
+  "surabaya": { label: "Surabaya, Indonesia", words: ["surabaya", "east java", "java", "indonesia", "southeast asia"] },
+  "bali": { label: "Bali, Indonesia", words: ["bali", "island", "indonesia", "southeast asia", "tropical"] },
+  "lombok": { label: "Lombok, Indonesia", words: ["lombok", "island", "indonesia", "southeast asia", "tropical"] },
+  "medan": { label: "Medan, Indonesia", words: ["medan", "north sumatra", "sumatra", "indonesia", "southeast asia"] },
+  "indonesia": { label: "Indonesia", words: ["indonesia", "southeast asia", "asia"] },
+  "singapore": { label: "Singapore", words: ["singapore", "southeast asia", "asia", "city state"] },
+  "malaysia": { label: "Malaysia", words: ["malaysia", "southeast asia", "asia"] },
+};
+
+// Words the optional AI tagger may suggest (subset of the dictionary keys plus a few extras).
+export const AI_LABELS = [
+  ...Object.keys(DICTIONARY),
+  "person", "people", "crowd", "car", "building", "tree", "sky", "water", "road", "house",
+];
+
+export const SHOT_LIST = [
+  { when: "Weeknight, 20 min at home", items: [
+    "Indonesian dishes top-down: nasi goreng, sambal, tempeh, satay - leave empty space on one side",
+    "Hands only: typing on a laptop, writing, counting rupiah notes",
+    "Coffee or tea being poured (also as a 10-20 s video)",
+    "Rain on a window, steam from a cup",
+    "Monstera leaves, batik fabric, wood or rattan textures as backgrounds",
+  ]},
+  { when: "Sunday morning, 1-2 h outside", items: [
+    "A landmark bridge or skyline at sunrise, tripod, several framings",
+    "Ferry terminal and boats at sea - no recognisable faces",
+    "Empty beach with palm trees and space for text",
+    "Fishing village, stilt houses, traditional boats",
+    "Market produce close-ups: chilies, fruit, fish on ice",
+    "Storm clouds over the sea (timelapse)",
+  ]},
+  { when: "Avoid (rejected or editorial only)", items: [
+    "Brand logos, readable car plates, recognisable faces without a model release",
+    "Generic subjects AI already floods: plain sunsets with nothing local, cliche flowers",
+  ]},
+];
