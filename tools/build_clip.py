@@ -49,6 +49,12 @@ PROMPTS = {
     "monstera": "a monstera plant leaf",
     "hands": "close-up of hands",
     "money": "money and coins",
+    "fly": "a close-up of a fly insect, such as a robber fly",
+    "moth": "a moth resting on a leaf",
+    "damselfly": "a thin damselfly resting on a stem",
+    "heron": "a heron or egret, a wading bird",
+    "pepper plant": "a black pepper vine with green peppercorns",
+    "insect": "a close-up photo of an insect",
 }
 SELFTEST_URLS = [
     "https://upload.wikimedia.org/wikipedia/commons/1/1e/Brachydiplax_chalybea_female_06685.jpg",

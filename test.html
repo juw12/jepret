@@ -214,6 +214,9 @@ check("frames averaged to one subject", oneSubject.words.join(" ") === "beach");
 const unclear = core.pickSceneWords([[1, 1, 1, 1]], labelNames, labelVectors, { minShare: 0.5, floorShare: 0.3 });
 check("unclear scene left for the user", unclear.words.length === 0);
 check("ranked list returned", oneSubject.ranked[0].label === "beach" && oneSubject.ranked.length === 4);
+// Runner-up holds ~19 % (above minShare) but only ~24 % of the top word: it must stay a suggestion.
+const weakRunnerUp = core.pickSceneWords([[1, 0.98, 0, 0]], labelNames, labelVectors);
+check("weak runner-up left as a suggestion", weakRunnerUp.words.join(" ") === "dragonfly");
 
 const failed = results.filter((line) => line.startsWith("FAIL")).length;
 document.getElementById("out").textContent = results.join("\n") + `\nSUMMARY ${results.length - failed}/${results.length} passed`;

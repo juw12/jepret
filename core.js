@@ -641,10 +641,11 @@ export function readXmp(jpeg) {
 /**
  * Turn image embeddings (one or more frames of a scene) into 1-3 scene words.
  * labelEmbeddings are unit vectors; CLIP's logit scale of 100 then a softmax gives a share per label.
- * A label is used when it holds at least minShare of the probability; the best label is always used
+ * A label is used when it holds at least minShare of the probability (extra labels also need relativeShare of
+ * the best one); the best label is always used
  * if it reaches floorShare, so a clear subject still gets a word.
  */
-export function pickSceneWords(imageEmbeddings, labels, labelEmbeddings, { maxWords = 3, minShare = 0.12, floorShare = 0.05 } = {}) {
+export function pickSceneWords(imageEmbeddings, labels, labelEmbeddings, { maxWords = 3, minShare = 0.12, floorShare = 0.05, relativeShare = 0.3 } = {}) {
   const dims = labelEmbeddings[0].length;
   const mean = new Float64Array(dims);
   for (const embed of imageEmbeddings) {
@@ -666,7 +667,10 @@ export function pickSceneWords(imageEmbeddings, labels, labelEmbeddings, { maxWo
   const sum = exps.reduce((a, b) => a + b, 0);
   const ranked = exps.map((value, index) => ({ label: labels[index], share: value / sum }))
     .sort((a, b) => b.share - a.share);
-  const chosen = ranked.filter((item) => item.share >= minShare).slice(0, maxWords);
+  // Extra words must be clear too: at least relativeShare of the best word, so a weak runner-up is left as a suggestion.
+  const chosen = ranked
+    .filter((item, index) => item.share >= minShare && (index === 0 || item.share >= relativeShare * ranked[0].share))
+    .slice(0, maxWords);
   if (!chosen.length && ranked[0].share >= floorShare) chosen.push(ranked[0]);
   return { words: chosen.map((item) => item.label), ranked: ranked.slice(0, 5) };
 }
