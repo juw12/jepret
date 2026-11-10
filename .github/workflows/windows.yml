@@ -1,0 +1,57 @@
+name: Windows app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "index.html"
+      - "styles.css"
+      - "app.js"
+      - "core.js"
+      - "vocab.js"
+      - "manifest.webmanifest"
+      - ".github/workflows/windows.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: app
+      - name: Build Jepret.exe
+        shell: pwsh
+        run: ./app/build.ps1
+      - name: Collect
+        shell: pwsh
+        run: |
+          Copy-Item app/target/release/jepret.exe Jepret.exe
+          Get-Item Jepret.exe | Select-Object Name, Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jepret-windows
+          path: Jepret.exe
+      # One rolling release so https://github.com/juw12/jepret/releases/latest/download/Jepret.exe always works.
+      - name: Publish to the latest release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $version = (Get-Content app/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $tag = "v$version"
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag Jepret.exe --repo $env:GITHUB_REPOSITORY --latest `
+              --title "Jepret $version for Windows" `
+              --notes "Download Jepret.exe and double-click it. No install, works offline, photos never leave your PC. Needs Microsoft Edge WebView2 (already on Windows 10/11). Unsigned: if SmartScreen warns, click More info > Run anyway."
+          } else {
+            gh release upload $tag Jepret.exe --repo $env:GITHUB_REPOSITORY --clobber
+          }
+          "Published Jepret.exe to $tag"

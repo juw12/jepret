@@ -2,7 +2,15 @@
 
 **Camera sitting idle? SD card in, stock upload files out.** Free, open source, and your photos never leave your computer.
 
-**Use it:** https://juw12.github.io/jepret/ (runs in Chrome or Edge, nothing to install)
+## Get the app
+
+| Where | How |
+|---|---|
+| **Windows** | Download [**Jepret.exe**](https://github.com/juw12/jepret/releases/latest/download/Jepret.exe) and double-click it. No installer, works offline. Unsigned, so SmartScreen may ask: *More info → Run anyway*. |
+| **Android / phone** | Open https://juw12.github.io/jepret/ in Chrome → menu → *Add to Home screen*. It then opens like an app and works offline. |
+| **Any computer** | Open https://juw12.github.io/jepret/ in Chrome or Edge and click **Install app** in the top bar (or just use the page). |
+
+All three are the same app: after the first open nothing needs the internet, and photos never leave your device.
 
 Jepret is for people with a mirrorless or DSLR camera, a full-time job and little time. It does the boring part of selling photos on stock sites:
 
@@ -38,9 +46,12 @@ python -m http.server 8000      # then open http://localhost:8000
 ```
 
 `core.js` holds the pure logic (tested in `test.html`), `vocab.js` the keyword dictionary, locations and shot list, `app.js` the UI.
+`sw.js` caches the app so it works offline. `app/` wraps the same files into `Jepret.exe` with [Tauri 2](https://tauri.app) (WebView2);
+GitHub Actions (`.github/workflows/windows.yml`) builds it on every change and attaches it to the latest release.
+To build locally: install Rust, then run `./app/build.ps1`.
 
 ## Not in v1 (on purpose)
 
-Paid plans, automatic upload to stock sites, video keywording, AI image recognition, face search for events, mobile app.
+Paid plans, automatic upload to stock sites, video keywording, AI image recognition, face search for events, a store-listed (Play Store) Android app.
 
 MIT licence. Made in Batam.

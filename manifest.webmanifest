@@ -1,9 +1,18 @@
 {
+  "id": "./",
   "name": "Jepret - SD card to stock upload files",
   "short_name": "Jepret",
+  "description": "Pick your camera SD card: Jepret removes blurry and duplicate shots, writes keywords and makes Adobe Stock and Shutterstock upload files. Works offline; photos never leave your device.",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f5f1ea",
   "theme_color": "#c43d22",
-  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+  "categories": ["photo", "productivity", "utilities"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
 }

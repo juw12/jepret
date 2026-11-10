@@ -17,7 +17,9 @@ const TEXT = {
     eyebrow: "Free · open source · photos stay on your computer",
     headline: "Camera sitting idle? SD card in, stock upload files out.",
     lead: "Jepret removes blurry and duplicate shots, writes titles and keywords, and makes the CSV files Adobe Stock and Shutterstock ask for.",
-    pick: "Choose SD card folder", demo: "Try with demo photos",
+    pick: "Choose SD card folder", demo: "Try with demo photos", install: "Install app",
+    getapp: "Get the app:", getwin: "Windows (Jepret.exe)",
+    getphone: "Phone: open this page in Chrome, then menu › Add to Home screen",
     s1: "Pick the DCIM folder on your card", s2: "Check the picks, type 3-5 words per scene",
     s3: "Download the CSV, upload photos + CSV to the stock site",
     honest: "Honest note: AI images flooded stock sites and earnings per photo fell. Jepret does not promise passive income; it removes the boring part so testing stock costs you little time.",
@@ -35,7 +37,9 @@ const TEXT = {
     eyebrow: "Gratis · open source · foto tetap di komputermu",
     headline: "Kamera nganggur? Masukkan SD card, keluar file siap upload ke stock.",
     lead: "Jepret membuang foto blur dan dobel, menulis judul dan kata kunci, dan membuat file CSV yang diminta Adobe Stock dan Shutterstock.",
-    pick: "Pilih folder SD card", demo: "Coba dengan foto demo",
+    pick: "Pilih folder SD card", demo: "Coba dengan foto demo", install: "Pasang aplikasi",
+    getapp: "Unduh aplikasi:", getwin: "Windows (Jepret.exe)",
+    getphone: "HP: buka halaman ini di Chrome, lalu menu › Tambahkan ke layar utama",
     s1: "Pilih folder DCIM di kartu", s2: "Cek pilihan, ketik 3-5 kata per adegan",
     s3: "Unduh CSV, upload foto + CSV ke situs stock",
     honest: "Jujur saja: gambar AI membanjiri situs stock dan penghasilan per foto turun. Jepret tidak menjanjikan passive income; ia menghapus bagian membosankan supaya mencoba stock tidak makan banyak waktu.",
@@ -448,8 +452,36 @@ async function runDemo() {
   }
 }
 
+// Installable app: offline cache + "Install app" button where the browser supports it.
+function initInstall() {
+  const isWeb = location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1";
+  if (isWeb && "serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch((error) => console.warn("service worker", error));
+  }
+  let deferredPrompt = null;
+  const button = $("#install");
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredPrompt = event;
+    button.hidden = false;
+  });
+  button.addEventListener("click", async () => {
+    if (!deferredPrompt) {
+      return;
+    }
+    deferredPrompt.prompt();
+    await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    button.hidden = true;
+  });
+  window.addEventListener("appinstalled", () => {
+    button.hidden = true;
+  });
+}
+
 function init() {
   initSettings();
+  initInstall();
   renderShotList();
   $("#picker").addEventListener("change", (event) => processFiles(event.target.files));
   $("#demo").addEventListener("click", runDemo);

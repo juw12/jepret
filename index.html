@@ -6,6 +6,8 @@
   <title>Jepret - SD card to stock upload files</title>
   <meta name="description" content="Free, open-source app: pick your camera SD card, Jepret removes blurry and duplicate shots, writes titles and keywords and makes Adobe Stock and Shutterstock upload files. Photos never leave your computer.">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <meta name="theme-color" content="#c43d22">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -16,6 +18,7 @@
       <span>Jepret</span>
     </a>
     <nav class="bar-actions">
+      <button id="install" class="ghost" type="button" hidden data-i18n="install">Install app</button>
       <button id="lang" class="ghost" type="button" aria-label="Switch language">ID</button>
       <button id="theme" class="ghost" type="button" aria-label="Switch theme">◐</button>
       <a class="ghost" href="https://github.com/juw12/jepret" target="_blank" rel="noopener">GitHub</a>
@@ -40,6 +43,12 @@
         <li><b>3</b><span data-i18n="s3">Download the CSV, upload photos + CSV to the stock site</span></li>
       </ol>
       <p class="honest" data-i18n="honest">Honest note: AI images flooded stock sites and earnings per photo fell. Jepret does not promise passive income; it removes the boring part so testing stock costs you little time.</p>
+      <p class="getapp">
+        <span data-i18n="getapp">Get the app:</span>
+        <a href="https://github.com/juw12/jepret/releases/latest/download/Jepret.exe" data-i18n="getwin">Windows (Jepret.exe)</a>
+        <span aria-hidden="true">·</span>
+        <span data-i18n="getphone">Phone: open this page in Chrome, then menu › Add to Home screen</span>
+      </p>
     </section>
 
     <section id="progress" class="panel" hidden>
