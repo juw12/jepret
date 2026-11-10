@@ -32,6 +32,7 @@ const TEXT = {
     people: "Recognisable people in these photos (marks them editorial)", title: "Title", keywords: "Keywords",
     reading: "Reading photo", of: "of", scene: "Scene", photos: "photos", photo: "photo", kept: "kept",
     noKeepers: "No keepers in this scene. Click a photo to keep it and fill in its words.",
+    blurNote: "Blur is judged on a small copy of each photo. If a photo marked blurry looks sharp to you at full size, click it to keep it.",
     keep: "keep", blurry: "blurry", duplicate: "duplicate", small: "too small", rejected: "rejected",
     summary: (k, r, g) => `${k} keepers, ${r} rejected, ${g} scenes. Click a photo to keep or reject it.`,
     ready: (n) => `${n} photos ready to export.`, needWords: (n) => `${n} scene(s) still need a description.`,
@@ -56,6 +57,7 @@ const TEXT = {
     people: "Ada orang yang bisa dikenali (ditandai editorial)", title: "Judul", keywords: "Kata kunci",
     reading: "Membaca foto", of: "dari", scene: "Adegan", photos: "foto", photo: "foto", kept: "dipilih",
     noKeepers: "Tidak ada foto terpilih di adegan ini. Klik foto untuk menyimpannya dan isi kata-katanya.",
+    blurNote: "Blur dinilai dari salinan kecil tiap foto. Kalau foto bertanda blur terlihat tajam di ukuran penuh, klik untuk menyimpannya.",
     keep: "simpan", blurry: "blur", duplicate: "dobel", small: "terlalu kecil", rejected: "dibuang",
     summary: (k, r, g) => `${k} dipilih, ${r} dibuang, ${g} adegan. Klik foto untuk simpan atau buang.`,
     ready: (n) => `${n} foto siap diekspor.`, needWords: (n) => `${n} adegan masih perlu deskripsi.`,
@@ -227,6 +229,15 @@ function renderReview() {
   const phoneHint = $("#phone-hint");
   phoneHint.hidden = !looksLikePhoneCopies(state.photos);
   phoneHint.textContent = t("phoneHint");
+  let blurNote = $("#blur-note");
+  if (!blurNote) {
+    blurNote = document.createElement("p");
+    blurNote.id = "blur-note";
+    blurNote.className = "muted";
+    $("#summary").after(blurNote);
+  }
+  blurNote.textContent = t("blurNote");
+  blurNote.hidden = !state.photos.some((photo) => photo.status === "blurry");
   const container = $("#groups");
   container.replaceChildren();
   const template = $("#group-template");
