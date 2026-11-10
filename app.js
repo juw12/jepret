@@ -28,10 +28,13 @@ const TEXT = {
     honest: "Honest note: AI images flooded stock sites and earnings per photo fell. Jepret does not promise passive income; it removes the boring part so testing stock costs you little time.",
     exportTitle: "Export", keepList: "Keeper list", saveFolder: "Copy keepers + CSV to a folder",
     shotTitle: "Shot list: what to shoot this week", privacy: "Nothing is uploaded. All analysis runs in this browser tab.",
-    describe: "Describe the scene (3-5 words)", location: "Location", category: "Adobe category",
-    people: "Recognisable people in these photos (marks them editorial)", title: "Title", keywords: "Keywords",
+    describe: "Describe the scene (3-5 words)", location: "Location", category: "Subject type (Adobe Stock list)",
+    people: "Someone's face can be recognised (no model release, so these go in as editorial)", title: "Title", keywords: "Keywords",
     reading: "Reading photo", of: "of", scene: "Scene", photos: "photos", photo: "photo", kept: "kept",
     noKeepers: "No keepers in this scene. Click a photo to keep it and fill in its words.",
+    saveHint: "You will be asked to allow saving, sometimes twice: choose Save changes, then Allow.",
+    saveFailed: "Could not save to that folder. Try another folder, or use the download buttons above.",
+    saved: (n) => `${n} photos + 2 CSV files saved.`,
     blurNote: "Blur is judged on a small copy of each photo. If a photo marked blurry looks sharp to you at full size, click it to keep it.",
     keep: "keep", blurry: "blurry", duplicate: "duplicate", small: "too small", rejected: "rejected",
     summary: (k, r, g) => `${k} keepers, ${r} rejected, ${g} scenes. Click a photo to keep or reject it.`,
@@ -53,10 +56,13 @@ const TEXT = {
     honest: "Jujur saja: gambar AI membanjiri situs stock dan penghasilan per foto turun. Jepret tidak menjanjikan passive income; ia menghapus bagian membosankan supaya mencoba stock tidak makan banyak waktu.",
     exportTitle: "Ekspor", keepList: "Daftar foto terpilih", saveFolder: "Salin foto terpilih + CSV ke folder",
     shotTitle: "Daftar foto: apa yang difoto minggu ini", privacy: "Tidak ada yang diunggah. Semua analisis berjalan di tab browser ini.",
-    describe: "Jelaskan adegan (3-5 kata)", location: "Lokasi", category: "Kategori Adobe",
-    people: "Ada orang yang bisa dikenali (ditandai editorial)", title: "Judul", keywords: "Kata kunci",
+    describe: "Jelaskan adegan (3-5 kata)", location: "Lokasi", category: "Jenis subjek (daftar Adobe Stock)",
+    people: "Ada wajah orang yang jelas (tanpa izin model, jadi dikirim sebagai editorial)", title: "Judul", keywords: "Kata kunci",
     reading: "Membaca foto", of: "dari", scene: "Adegan", photos: "foto", photo: "foto", kept: "dipilih",
     noKeepers: "Tidak ada foto terpilih di adegan ini. Klik foto untuk menyimpannya dan isi kata-katanya.",
+    saveHint: "Kamu akan diminta izin menyimpan, kadang dua kali: pilih Save changes, lalu Allow.",
+    saveFailed: "Gagal menyimpan ke folder itu. Coba folder lain, atau pakai tombol unduh di atas.",
+    saved: (n) => `${n} foto + 2 file CSV tersimpan.`,
     blurNote: "Blur dinilai dari salinan kecil tiap foto. Kalau foto bertanda blur terlihat tajam di ukuran penuh, klik untuk menyimpannya.",
     keep: "simpan", blurry: "blur", duplicate: "dobel", small: "terlalu kecil", rejected: "dibuang",
     summary: (k, r, g) => `${k} dipilih, ${r} dibuang, ${g} adegan. Klik foto untuk simpan atau buang.`,
@@ -135,6 +141,7 @@ async function analyse(file) {
   const sharp = sharpness(gray, w, h);
 
   const hash = differenceHash(shrinkGray(gray, w, h));
+  const look = shrinkGray(gray, w, h, 32, 24);
 
   const thumbScale = 360 / Math.max(width, height);
   const thumb = makeCanvas(Math.round(width * thumbScale), Math.round(height * thumbScale));
@@ -153,6 +160,7 @@ async function analyse(file) {
     orientation: width > height * 1.05 ? "horizontal" : height > width * 1.05 ? "vertical" : "square",
     colours: colourWords(pixels),
     hash,
+    look,
     thumbUrl: await canvasToUrl(thumb),
   };
 }
@@ -378,7 +386,7 @@ async function saveToFolder() {
     await writable.write(content);
     await writable.close();
   }
-  $("#export-status").textContent = `${items.length} photos + 2 CSV files saved.`;
+  $("#export-status").textContent = t("saved", items.length);
 }
 
 // ---------------------------------------------------------------- demo photos
@@ -530,7 +538,14 @@ function init() {
   });
   if ("showDirectoryPicker" in window) {
     $("#save-folder").hidden = false;
-    $("#save-folder").addEventListener("click", () => saveToFolder().catch((error) => console.warn(error)));
+    $("#save-folder").addEventListener("click", () => {
+    $("#export-status").textContent = t("saveHint");
+    saveToFolder().catch((error) => {
+      console.warn(error);
+      updateExportStatus();
+      if (error.name !== "AbortError") $("#export-status").textContent = t("saveFailed");
+    });
+  });
   }
   if (new URLSearchParams(location.search).has("demo")) runDemo();
   window.__jepret = { state, exportItems, readyItems, adobeCsv, shutterstockCsv };

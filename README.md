@@ -44,9 +44,8 @@ Everything runs in the browser tab: photo analysis uses the canvas API on your c
 ## How the checks work
 
 - **Blur:** Laplacian variance of the sharpest tiles of a downscaled copy, so a sharp subject on a soft background still counts as sharp. The bar is relative to the batch (30 % of the 75th-percentile score, capped at 60), so it still holds when most of a card is soft.
-- **Duplicates:** a 64-bit difference hash from a box-averaged 9×8 copy, compared only between frames shot within 60 s, so a softer copy of the same frame still matches.
-- **Tested on real a6400 files:** 10 ILCE-6400 JPEGs plus strongly and mildly blurred copies (30 files). All 9 sharp originals over 4 MP were kept, all 18 blurred copies rejected, the 3.6 MP crop flagged as too small, scenes split by EXIF date. 2M phone copies of the same files triggered the transfer-size warning.
-- **Duplicates:** 64-bit difference hash; frames within 60 s of each other and at most 6 bits apart are a burst, and only the sharpest is kept.
+- **Duplicates:** only frames shot within 60 s of each other are compared. Two frames are a burst if their 64-bit difference hash is at most 6 bits apart, or if their 32×24 grayscale copies correlate at 0.85 or more after allowing a small shift (about 9 % sideways, 8 % up/down). The shift check matters: on real a6400 files a 2–3 % handheld drift pushed the hash past 6 bits in most frames, while the aligned check scored every simulated burst frame (drift, 1–2° tilt, ±⅓–⅔ EV) at 0.88 or more and every pair of different photos at 0.37 or less. Only the sharpest frame of a burst is kept.
+- **Tested on real a6400 files:** 10 ILCE-6400 JPEGs plus strongly and mildly blurred copies (30 files). All 9 sharp originals over 4 MP were kept, all 18 blurred copies rejected, the 3.6 MP crop flagged as too small, scenes split by EXIF date. 2M phone copies of the same files triggered the transfer-size warning. The Windows exe was driven end to end on the same set, including **Copy keepers + CSV to a folder** (Windows asks twice: *Save changes*, then *Allow*); the 9 copied JPGs were byte-identical to the originals.
 - **You decide:** click any photo to keep or reject it.
 
 ## Develop

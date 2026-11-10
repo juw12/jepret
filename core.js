@@ -7,6 +7,7 @@ export const LIMITS = {
   maxKeywords: 49,
   maxFilenameChars: 30,      // Adobe Stock CSV filename limit
   duplicateDistance: 6,      // dHash bits (0..64)
+  duplicateSimilarity: 0.85, // aligned 32x24 look match (0..1); survives handheld drift and exposure steps
   burstSeconds: 60,
   maxBlurBar: 60,             // Laplacian score on the 800 px copy; sharp camera shots score 150+          // only frames this close in time can be burst duplicates
   groupGapMinutes: 10,       // photos closer than this belong to one scene
@@ -96,6 +97,54 @@ export function differenceHash(gray9x8) {
   return hash;
 }
 
+/**
+ * How alike two 32x24 grayscale thumbnails are (0..1), allowing a small shift between them.
+ * A handheld burst drifts 2-5 % between frames, which breaks a 9x8 dHash; normalised correlation over
+ * the best of a few small offsets (about 9 % sideways, 8 % up/down) does not, and ignores exposure steps.
+ */
+export function alignedSimilarity(a, b, width = 32, height = 24, maxDx = 3, maxDy = 2) {
+  let best = -1;
+  for (let dy = -maxDy; dy <= maxDy; dy += 1) {
+    for (let dx = -maxDx; dx <= maxDx; dx += 1) {
+      const x0 = Math.max(0, dx);
+      const x1 = width + Math.min(0, dx);
+      const y0 = Math.max(0, dy);
+      const y1 = height + Math.min(0, dy);
+      const count = (x1 - x0) * (y1 - y0);
+      let sumA = 0;
+      let sumB = 0;
+      for (let y = y0; y < y1; y += 1) {
+        for (let x = x0; x < x1; x += 1) {
+          sumA += a[y * width + x];
+          sumB += b[(y - dy) * width + (x - dx)];
+        }
+      }
+      const meanA = sumA / count;
+      const meanB = sumB / count;
+      let cross = 0;
+      let varA = 0;
+      let varB = 0;
+      for (let y = y0; y < y1; y += 1) {
+        for (let x = x0; x < x1; x += 1) {
+          const va = a[y * width + x] - meanA;
+          const vb = b[(y - dy) * width + (x - dx)] - meanB;
+          cross += va * vb;
+          varA += va * va;
+          varB += vb * vb;
+        }
+      }
+      if (varA > 0 && varB > 0) best = Math.max(best, cross / Math.sqrt(varA * varB));
+    }
+  }
+  return best;
+}
+
+/** Same scene within a burst: matching hash, or matching look after allowing for a small shift. */
+export function looksAlike(a, b) {
+  if (hammingDistance(a.hash, b.hash) <= LIMITS.duplicateDistance) return true;
+  return Boolean(a.look && b.look) && alignedSimilarity(a.look, b.look) >= LIMITS.duplicateSimilarity;
+}
+
 export function hammingDistance(a, b) {
   let x = a ^ b;
   let count = 0;
@@ -171,7 +220,7 @@ export function judge(photos) {
     }
     const sameBurst = previousKept
       && Math.abs((photo.time ?? 0) - (previousKept.time ?? 0)) <= LIMITS.burstSeconds * 1000;
-    if (sameBurst && hammingDistance(previousKept.hash, photo.hash) <= LIMITS.duplicateDistance) {
+    if (sameBurst && looksAlike(previousKept, photo)) {
       if (photo.sharpness > previousKept.sharpness) {
         previousKept.status = "duplicate";
         previousKept.reason = `less sharp than ${photo.name}`;
