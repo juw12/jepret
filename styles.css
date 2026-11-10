@@ -93,3 +93,11 @@ details h4 { margin: 16px 0 4px; }
 .export h2 { margin-top: 0; }
 .foot { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 20px clamp(16px, 4vw, 40px); border-top: 1px solid var(--line); font-size: 14px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+.primary.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+.secondary input[type=file] { position: absolute; inset: 0; opacity: 0; width: 1px; height: 1px; }
+.tip { margin-top: 18px; font-size: 14px; color: var(--ink); background: color-mix(in srgb, var(--accent) 9%, transparent);
+  border-radius: 8px; padding: 10px 12px; max-width: 62ch; }
+.hint { margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.hint[hidden], #folder-label[hidden] { display: none; }

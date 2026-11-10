@@ -1,6 +1,6 @@
 import {
-  ADOBE_CATEGORIES, adobeCsv, buildMetadata, colourWords, differenceHash, groupByTime,
-  judge, sharpness, shutterstockCsv, toGray, validateItem,
+  ADOBE_CATEGORIES, adobeCsv, buildMetadata, colourWords, differenceHash, exifTime, groupByTime,
+  judge, looksLikePhoneCopies, sharpness, shutterstockCsv, toGray, validateItem,
 } from "./core.js";
 import { DICTIONARY, LOCATIONS, SHOT_LIST } from "./vocab.js";
 
@@ -15,12 +15,15 @@ const SHUTTERSTOCK_BY_ADOBE = {
 const TEXT = {
   en: {
     eyebrow: "Free · open source · photos stay on your computer",
-    headline: "Camera sitting idle? SD card in, stock upload files out.",
+    headline: "Camera sitting idle? Photos in, stock upload files out.",
     lead: "Jepret removes blurry and duplicate shots, writes titles and keywords, and makes the CSV files Adobe Stock and Shutterstock ask for.",
-    pick: "Choose SD card folder", demo: "Try with demo photos", install: "Install app",
+    pickPhotos: "Choose photos", pick: "Choose a folder (SD card)", demo: "Try with demo photos", install: "Install app",
     getapp: "Get the app:", getwin: "Windows (Jepret.exe)",
     getphone: "Phone: open this page in Chrome, then menu › Add to Home screen",
-    s1: "Pick the DCIM folder on your card", s2: "Check the picks, type 3-5 words per scene",
+    s1: "Pick the photos your camera sent to your phone, or the DCIM folder on your SD card",
+    s2: "Check the picks, type 3-5 words per scene",
+    tip: "Sony camera to phone (Imaging Edge Mobile or Creators' App)? Set the transfer size to Original first. The default 2M copies are about 2 MP, below Adobe Stock's 4 MP minimum.",
+    phoneHint: "These look like 2M phone-transfer copies, too small for Adobe Stock (4 MP minimum). In Imaging Edge Mobile or Creators' App set the transfer size to Original, send the photos again, then load them here.",
     s3: "Download the CSV, upload photos + CSV to the stock site",
     honest: "Honest note: AI images flooded stock sites and earnings per photo fell. Jepret does not promise passive income; it removes the boring part so testing stock costs you little time.",
     exportTitle: "Export", keepList: "Keeper list", saveFolder: "Copy keepers + CSV to a folder",
@@ -31,16 +34,19 @@ const TEXT = {
     keep: "keep", blurry: "blurry", duplicate: "duplicate", small: "too small", rejected: "rejected",
     summary: (k, r, g) => `${k} keepers, ${r} rejected, ${g} scenes. Click a photo to keep or reject it.`,
     ready: (n) => `${n} photos ready to export.`, needWords: (n) => `${n} scene(s) still need a description.`,
-    none: "No JPG photos found in that folder.", kwCount: (n) => `${n} / 49 keywords`,
+    none: "No JPG photos found there.", kwCount: (n) => `${n} / 49 keywords`,
   },
   id: {
     eyebrow: "Gratis · open source · foto tetap di komputermu",
-    headline: "Kamera nganggur? Masukkan SD card, keluar file siap upload ke stock.",
+    headline: "Kamera nganggur? Masukkan foto, keluar file siap upload ke stock.",
     lead: "Jepret membuang foto blur dan dobel, menulis judul dan kata kunci, dan membuat file CSV yang diminta Adobe Stock dan Shutterstock.",
-    pick: "Pilih folder SD card", demo: "Coba dengan foto demo", install: "Pasang aplikasi",
+    pickPhotos: "Pilih foto", pick: "Pilih folder (SD card)", demo: "Coba dengan foto demo", install: "Pasang aplikasi",
     getapp: "Unduh aplikasi:", getwin: "Windows (Jepret.exe)",
     getphone: "HP: buka halaman ini di Chrome, lalu menu › Tambahkan ke layar utama",
-    s1: "Pilih folder DCIM di kartu", s2: "Cek pilihan, ketik 3-5 kata per adegan",
+    s1: "Pilih foto yang dikirim kamera ke HP, atau folder DCIM di SD card",
+    s2: "Cek pilihan, ketik 3-5 kata per adegan",
+    tip: "Kirim dari kamera Sony ke HP (Imaging Edge Mobile atau Creators' App)? Ubah ukuran kirim ke Original dulu. Salinan bawaan 2M hanya sekitar 2 MP, di bawah minimum Adobe Stock 4 MP.",
+    phoneHint: "Foto ini sepertinya salinan 2M dari aplikasi HP, terlalu kecil untuk Adobe Stock (minimum 4 MP). Di Imaging Edge Mobile atau Creators' App ubah ukuran kirim ke Original, kirim ulang, lalu muat di sini.",
     s3: "Unduh CSV, upload foto + CSV ke situs stock",
     honest: "Jujur saja: gambar AI membanjiri situs stock dan penghasilan per foto turun. Jepret tidak menjanjikan passive income; ia menghapus bagian membosankan supaya mencoba stock tidak makan banyak waktu.",
     exportTitle: "Ekspor", keepList: "Daftar foto terpilih", saveFolder: "Salin foto terpilih + CSV ke folder",
@@ -51,7 +57,7 @@ const TEXT = {
     keep: "simpan", blurry: "blur", duplicate: "dobel", small: "terlalu kecil", rejected: "dibuang",
     summary: (k, r, g) => `${k} dipilih, ${r} dibuang, ${g} adegan. Klik foto untuk simpan atau buang.`,
     ready: (n) => `${n} foto siap diekspor.`, needWords: (n) => `${n} adegan masih perlu deskripsi.`,
-    none: "Tidak ada foto JPG di folder itu.", kwCount: (n) => `${n} / 49 kata kunci`,
+    none: "Tidak ada foto JPG di sana.", kwCount: (n) => `${n} / 49 kata kunci`,
   },
 };
 
@@ -109,6 +115,8 @@ async function canvasToUrl(canvas) {
 }
 
 async function analyse(file) {
+  // EXIF sits in the first 64 KB; phone transfers reset the file date, so prefer the shooting time.
+  const shotTime = exifTime(await file.slice(0, 128 * 1024).arrayBuffer());
   const bitmap = await createImageBitmap(file);
   const { width, height } = bitmap;
   const scale = Math.min(1, 800 / Math.max(width, height));
@@ -134,7 +142,7 @@ async function analyse(file) {
   return {
     name: file.name,
     file,
-    time: file.lastModified,
+    time: shotTime ?? file.lastModified,
     width,
     height,
     megapixels: (width * height) / 1e6,
@@ -148,7 +156,7 @@ async function analyse(file) {
 }
 
 async function processFiles(fileList) {
-  const files = [...fileList].filter((file) => /\.jpe?g$/i.test(file.name));
+  const files = [...fileList].filter((file) => file.type === "image/jpeg" || /\.jpe?g$/i.test(file.name));
   if (!files.length) {
     alert(t("none"));
     return;
@@ -216,6 +224,9 @@ function exportItems() {
 function renderReview() {
   const keepers = state.photos.filter((photo) => photo.status === "keep").length;
   $("#summary").textContent = t("summary", keepers, state.photos.length - keepers, state.groups.length);
+  const phoneHint = $("#phone-hint");
+  phoneHint.hidden = !looksLikePhoneCopies(state.photos);
+  phoneHint.textContent = t("phoneHint");
   const container = $("#groups");
   container.replaceChildren();
   const template = $("#group-template");
@@ -484,6 +495,10 @@ function init() {
   initInstall();
   renderShotList();
   $("#picker").addEventListener("change", (event) => processFiles(event.target.files));
+  $("#picker-photos").addEventListener("change", (event) => processFiles(event.target.files));
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    $("#folder-label").hidden = true;
+  }
   $("#demo").addEventListener("click", runDemo);
   $("#dl-adobe").addEventListener("click", () => download("adobe_stock.csv", adobeCsv(readyItems())));
   $("#dl-shutter").addEventListener("click", () => download("shutterstock.csv", shutterstockCsv(readyItems())));

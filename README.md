@@ -1,6 +1,6 @@
 # Jepret
 
-**Camera sitting idle? SD card in, stock upload files out.** Free, open source, and your photos never leave your computer.
+**Camera sitting idle? Photos in, stock upload files out.** Free, open source, and your photos never leave your computer.
 
 ## Get the app
 
@@ -14,13 +14,24 @@ All three are the same app: after the first open nothing needs the internet, and
 
 Jepret is for people with a mirrorless or DSLR camera, a full-time job and little time. It does the boring part of selling photos on stock sites:
 
-1. **Pick the SD card folder** (or try the demo photos).
+1. **Pick your photos:** the ones your camera sent to your phone, or the SD card folder (or try the demo photos).
 2. **Culling, automatic:** removes blurry shots and near-duplicate burst frames, flags photos under 4 MP (Adobe Stock's minimum).
 3. **Scenes, automatic:** photos shot close together in time are grouped, so you describe each scene once in 3-5 words.
 4. **Keywords:** your words are expanded with a stock keyword dictionary, location packs (Batam, Bali, Jakarta, ...) and facts from the image (orientation, colours, empty space for text). Up to 49 keywords and a title under 70 characters, editable.
 5. **Export:** `adobe_stock.csv` and `shutterstock.csv` in each site's CSV upload format, plus an optional copy of the keepers into a folder (Chrome/Edge).
 
 See [`sample/`](sample/) for real output made from the demo photos.
+
+## Straight from the camera to your phone (no SD card)
+
+Sony cameras like the a6400 can send photos to your phone over Wi-Fi with **Imaging Edge Mobile** or **Creators' App**.
+Open Jepret on the phone, tap **Choose photos** and select them from the gallery.
+
+- **Set the transfer size to Original first.** The apps send **2M** copies by default (about 2 MP), which is below
+  Adobe Stock's 4 MP minimum. Jepret warns you when a batch looks like 2M copies.
+- RAW files are converted to JPEG when sent to the phone; that is fine for stock.
+- Jepret reads the shooting time from each photo's EXIF data, so scenes and burst duplicates still group correctly even
+  though the phone gives every transferred file the same date.
 
 ## Honest expectations
 

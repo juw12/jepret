@@ -1,6 +1,6 @@
 // Jepret service worker: makes the app installable and usable offline.
 // Photos are never cached or sent anywhere; only the app's own files are.
-const VERSION = "jepret-v2";
+const VERSION = "jepret-v3";
 const SHELL = [
   "./",
   "index.html",

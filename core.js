@@ -2,6 +2,7 @@
 
 export const LIMITS = {
   minMegapixels: 4,          // Adobe Stock minimum
+  phoneCopyMegapixels: [1.5, 2.6], // Sony phone-transfer "2M" copies land in this range
   maxTitleChars: 70,         // Adobe Stock CSV title limit
   maxKeywords: 49,
   maxFilenameChars: 30,      // Adobe Stock CSV filename limit
@@ -284,4 +285,84 @@ export function shutterstockCsv(items) {
     "no",
   ]));
   return csvRows(rows);
+}
+
+
+// ---------------------------------------------------------------- shooting time
+
+// EXIF DateTimeOriginal (falling back to DateTime) as a local-time timestamp in ms, or null.
+// Phone transfers (Imaging Edge Mobile, Creators' App, gallery copies) set the file date to the
+// moment of transfer, so the real shooting time has to come from EXIF.
+export function exifTime(buffer) {
+  const view = new DataView(buffer);
+  if (view.byteLength < 4 || view.getUint16(0) !== 0xffd8) return null;
+  let offset = 2;
+  while (offset + 4 <= view.byteLength) {
+    const marker = view.getUint16(offset);
+    if ((marker & 0xff00) !== 0xff00) return null;
+    const length = view.getUint16(offset + 2);
+    const isExif = marker === 0xffe1
+      && offset + 10 <= view.byteLength
+      && view.getUint32(offset + 4) === 0x45786966; // "Exif"
+    if (isExif) {
+      return readTiffTime(view, offset + 10, Math.min(view.byteLength, offset + 2 + length));
+    }
+    if (marker === 0xffda) return null; // image data starts: no EXIF before it
+    offset += 2 + length;
+  }
+  return null;
+}
+
+function readTiffTime(view, start, end) {
+  if (start + 8 > end) return null;
+  const order = view.getUint16(start);
+  const little = order === 0x4949;
+  if (!little && order !== 0x4d4d) return null;
+  const u16 = (at) => view.getUint16(at, little);
+  const u32 = (at) => view.getUint32(at, little);
+
+  const readIfd = (ifdOffset) => {
+    const at = start + ifdOffset;
+    const tags = {};
+    if (at + 2 > end) return tags;
+    const count = u16(at);
+    for (let index = 0; index < count; index += 1) {
+      const entry = at + 2 + index * 12;
+      if (entry + 12 > end) break;
+      tags[u16(entry)] = { type: u16(entry + 2), count: u32(entry + 4), value: entry + 8 };
+    }
+    return tags;
+  };
+
+  const dateText = (tag) => {
+    if (!tag || tag.type !== 2 || tag.count < 19) return null;
+    const at = tag.count > 4 ? start + u32(tag.value) : tag.value;
+    if (at + 19 > end) return null;
+    let text = "";
+    for (let index = 0; index < 19; index += 1) {
+      text += String.fromCharCode(view.getUint8(at + index));
+    }
+    return text;
+  };
+
+  const ifd0 = readIfd(u32(start + 4));
+  let text = null;
+  if (ifd0[0x8769]) {
+    const exifIfd = readIfd(u32(ifd0[0x8769].value));
+    text = dateText(exifIfd[0x9003]);
+  }
+  if (!text) text = dateText(ifd0[0x0132]);
+  const match = text && /^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})$/.exec(text);
+  if (!match) return null;
+  const [year, month, day, hour, minute, second] = match.slice(1).map(Number);
+  if (year < 1990) return null;
+  const time = new Date(year, month - 1, day, hour, minute, second).getTime();
+  return Number.isFinite(time) ? time : null;
+}
+
+// True when most photos look like the "2M" copies that Sony's phone apps send by default.
+export function looksLikePhoneCopies(photos) {
+  const [low, high] = LIMITS.phoneCopyMegapixels;
+  const copies = photos.filter((photo) => photo.megapixels >= low && photo.megapixels < high);
+  return copies.length >= 2 && copies.length >= photos.length / 2;
 }
