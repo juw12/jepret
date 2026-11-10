@@ -1,6 +1,6 @@
 import {
   ADOBE_CATEGORIES, adobeCsv, buildMetadata, colourWords, differenceHash, exifTime, groupByTime,
-  judge, looksLikePhoneCopies, sharpness, shutterstockCsv, toGray, validateItem,
+  judge, looksLikePhoneCopies, sharpness, shrinkGray, shutterstockCsv, toGray, validateItem,
 } from "./core.js";
 import { DICTIONARY, LOCATIONS, SHOT_LIST } from "./vocab.js";
 
@@ -30,7 +30,8 @@ const TEXT = {
     shotTitle: "Shot list: what to shoot this week", privacy: "Nothing is uploaded. All analysis runs in this browser tab.",
     describe: "Describe the scene (3-5 words)", location: "Location", category: "Adobe category",
     people: "Recognisable people in these photos (marks them editorial)", title: "Title", keywords: "Keywords",
-    reading: "Reading photo", of: "of", scene: "Scene", photos: "photos", kept: "kept",
+    reading: "Reading photo", of: "of", scene: "Scene", photos: "photos", photo: "photo", kept: "kept",
+    noKeepers: "No keepers in this scene. Click a photo to keep it and fill in its words.",
     keep: "keep", blurry: "blurry", duplicate: "duplicate", small: "too small", rejected: "rejected",
     summary: (k, r, g) => `${k} keepers, ${r} rejected, ${g} scenes. Click a photo to keep or reject it.`,
     ready: (n) => `${n} photos ready to export.`, needWords: (n) => `${n} scene(s) still need a description.`,
@@ -53,7 +54,8 @@ const TEXT = {
     shotTitle: "Daftar foto: apa yang difoto minggu ini", privacy: "Tidak ada yang diunggah. Semua analisis berjalan di tab browser ini.",
     describe: "Jelaskan adegan (3-5 kata)", location: "Lokasi", category: "Kategori Adobe",
     people: "Ada orang yang bisa dikenali (ditandai editorial)", title: "Judul", keywords: "Kata kunci",
-    reading: "Membaca foto", of: "dari", scene: "Adegan", photos: "foto", kept: "dipilih",
+    reading: "Membaca foto", of: "dari", scene: "Adegan", photos: "foto", photo: "foto", kept: "dipilih",
+    noKeepers: "Tidak ada foto terpilih di adegan ini. Klik foto untuk menyimpannya dan isi kata-katanya.",
     keep: "simpan", blurry: "blur", duplicate: "dobel", small: "terlalu kecil", rejected: "dibuang",
     summary: (k, r, g) => `${k} dipilih, ${r} dibuang, ${g} adegan. Klik foto untuk simpan atau buang.`,
     ready: (n) => `${n} foto siap diekspor.`, needWords: (n) => `${n} adegan masih perlu deskripsi.`,
@@ -124,15 +126,13 @@ async function analyse(file) {
   const h = Math.max(16, Math.round(height * scale));
   const canvas = makeCanvas(w, h);
   const context = canvas.getContext("2d", { willReadFrequently: true });
+  context.imageSmoothingQuality = "high";
   context.drawImage(bitmap, 0, 0, w, h);
   const pixels = context.getImageData(0, 0, w, h).data;
   const gray = toGray(pixels, w, h);
   const sharp = sharpness(gray, w, h);
 
-  const tiny = makeCanvas(9, 8);
-  const tinyContext = tiny.getContext("2d", { willReadFrequently: true });
-  tinyContext.drawImage(bitmap, 0, 0, 9, 8);
-  const hash = differenceHash(toGray(tinyContext.getImageData(0, 0, 9, 8).data, 9, 8));
+  const hash = differenceHash(shrinkGray(gray, w, h));
 
   const thumbScale = 360 / Math.max(width, height);
   const thumb = makeCanvas(Math.round(width * thumbScale), Math.round(height * thumbScale));
@@ -239,7 +239,18 @@ function renderReview() {
     const keptCount = group.photos.filter((photo) => photo.status === "keep").length;
     node.querySelector("h3").textContent = `${t("scene")} ${group.id}`;
     node.querySelector(".group-meta").textContent =
-      `${new Date(group.start).toLocaleString()} · ${group.photos.length} ${t("photos")} · ${keptCount} ${t("kept")}`;
+      `${new Date(group.start).toLocaleString()} · ${group.photos.length} ${t(group.photos.length === 1 ? "photo" : "photos")} · ${keptCount} ${t("kept")}`;
+
+    if (keptCount === 0) {
+      // Nothing to upload from this scene: keep the card short and say why.
+      node.classList.add("empty");
+      node.querySelector(".fields").hidden = true;
+      node.querySelector(".output").hidden = true;
+      const note = document.createElement("p");
+      note.className = "muted empty-note";
+      note.textContent = t("noKeepers");
+      node.querySelector(".thumbs").after(note);
+    }
 
     const thumbs = node.querySelector(".thumbs");
     group.photos.forEach((photo) => {

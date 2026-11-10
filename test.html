@@ -40,6 +40,37 @@ const scenes = [
 core.judge(scenes);
 check("similar photos 45 min apart are not duplicates", scenes.every((p) => p.status === "keep"));
 
+// Shrink + hash: a softened copy of the same frame must still hash as a near-duplicate.
+const flat18 = new Float32Array(18 * 16).fill(50);
+check("shrinkGray averages flat image", core.shrinkGray(flat18, 18, 16).every((v) => v === 50));
+const sceneW = 180;
+const sceneH = 120;
+const scene = new Float32Array(sceneW * sceneH).map((_, i) => {
+  const x = i % sceneW;
+  const y = Math.floor(i / sceneW);
+  return 128 + 60 * Math.sin(x / 17) * Math.cos(y / 23) + ((i * 7919) % 31) - 15;
+});
+const softened = scene.map((_, i) => {
+  const x = i % sceneW;
+  const left = scene[i - (x > 2 ? 3 : 0)];
+  const right = scene[i + (x < sceneW - 3 ? 3 : 0)];
+  return (left + scene[i] + right) / 3;
+});
+const sharpHash = core.differenceHash(core.shrinkGray(scene, sceneW, sceneH));
+const softHash = core.differenceHash(core.shrinkGray(softened, sceneW, sceneH));
+check("softened copy hashes as near-duplicate", core.hammingDistance(sharpHash, softHash) <= core.LIMITS.duplicateDistance);
+
+// Real a6400 scores (800 px copy): a batch where most frames are soft must still reject them.
+const mostlySoft = [268, 300, 327, 736, 944, 9, 10, 13, 16, 30, 47, 1, 1, 2].map((score, i) => ({
+  name: `r${i}.jpg`, megapixels: 24, sharpness: score, hash: BigInt(i) * 0x0f0f0f0fn, time: i * 5 * 60000,
+}));
+core.judge(mostlySoft);
+check("sharp a6400 frames kept in a mostly-soft batch", mostlySoft.slice(0, 5).every((p) => p.status === "keep"));
+check("soft a6400 frames rejected in a mostly-soft batch", mostlySoft.slice(5).every((p) => p.status === "blurry"));
+
+const noPlace = core.buildMetadata({ words: "insect macro nature", locationKey: "", people: false, orientation: "horizontal", colours: [], copySpace: false }, DICTIONARY, LOCATIONS);
+check("no location leaves no dangling 'in'", noPlace.title === "Insect macro nature");
+
 const groups = core.groupByTime([{ time: 0 }, { time: 60000 }, { time: 60000 * 30 }]);
 check("two scenes from 30 min gap", groups.length === 2 && groups[0].photos.length === 2);
 

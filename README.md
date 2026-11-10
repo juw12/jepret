@@ -43,7 +43,9 @@ Everything runs in the browser tab: photo analysis uses the canvas API on your c
 
 ## How the checks work
 
-- **Blur:** Laplacian variance of the sharpest tiles of a downscaled copy, so a sharp subject on a soft background still counts as sharp. The bar is relative to the batch (30 % of the median, capped at 60).
+- **Blur:** Laplacian variance of the sharpest tiles of a downscaled copy, so a sharp subject on a soft background still counts as sharp. The bar is relative to the batch (30 % of the 75th-percentile score, capped at 60), so it still holds when most of a card is soft.
+- **Duplicates:** a 64-bit difference hash from a box-averaged 9×8 copy, compared only between frames shot within 60 s, so a softer copy of the same frame still matches.
+- **Tested on real a6400 files:** 10 ILCE-6400 JPEGs plus strongly and mildly blurred copies (30 files). All 9 sharp originals over 4 MP were kept, all 18 blurred copies rejected, the 3.6 MP crop flagged as too small, scenes split by EXIF date. 2M phone copies of the same files triggered the transfer-size warning.
 - **Duplicates:** 64-bit difference hash; frames within 60 s of each other and at most 6 bits apart are a burst, and only the sharpest is kept.
 - **You decide:** click any photo to keep or reject it.
 

@@ -100,4 +100,5 @@ details h4 { margin: 16px 0 4px; }
   border-radius: 8px; padding: 10px 12px; max-width: 62ch; }
 .hint { margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; font-weight: 600;
   background: color-mix(in srgb, var(--accent) 14%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
-.hint[hidden], #folder-label[hidden] { display: none; }
+.hint[hidden], #folder-label[hidden], .fields[hidden], .output[hidden] { display: none; }
+.empty-note { margin: 10px 0 0; }

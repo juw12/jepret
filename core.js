@@ -7,7 +7,8 @@ export const LIMITS = {
   maxKeywords: 49,
   maxFilenameChars: 30,      // Adobe Stock CSV filename limit
   duplicateDistance: 6,      // dHash bits (0..64)
-  burstSeconds: 60,          // only frames this close in time can be burst duplicates
+  burstSeconds: 60,
+  maxBlurBar: 60,             // Laplacian score on the 800 px copy; sharp camera shots score 150+          // only frames this close in time can be burst duplicates
   groupGapMinutes: 10,       // photos closer than this belong to one scene
 };
 
@@ -62,6 +63,24 @@ export function sharpness(gray, width, height, tiles = 6) {
   const best = variances.slice(0, Math.max(2, Math.floor(variances.length / 10)));
   const score = best.reduce((sum, v) => sum + v, 0) / best.length;
   return { score, flatShare: flatTiles / Math.max(1, variances.length) };
+}
+
+/**
+ * Box-average a grayscale image down to outW x outH.
+ * Averaging every pixel (not sampling a few) keeps the duplicate hash stable when one frame is softer or noisier.
+ */
+export function shrinkGray(gray, width, height, outW = 9, outH = 8) {
+  const sums = new Float64Array(outW * outH);
+  const counts = new Float64Array(outW * outH);
+  for (let y = 0; y < height; y += 1) {
+    const row = Math.min(outH - 1, Math.floor((y * outH) / height));
+    for (let x = 0; x < width; x += 1) {
+      const cell = row * outW + Math.min(outW - 1, Math.floor((x * outW) / width));
+      sums[cell] += gray[y * width + x];
+      counts[cell] += 1;
+    }
+  }
+  return sums.map((sum, i) => (counts[i] ? sum / counts[i] : 0));
 }
 
 /** 64-bit difference hash as a BigInt, from a 9x8 grayscale thumbnail. */
@@ -129,11 +148,13 @@ export function colourWords(rgba) {
 /**
  * Decide keep/reject for analysed photos (sorted by capture time).
  * Blur uses a batch-relative bar so one camera's settings don't break it.
+ * The bar comes from the 75th-percentile score, so it holds even when most of a batch is soft.
  */
 export function judge(photos) {
   const scores = photos.map((p) => p.sharpness).filter((s) => s > 0).sort((a, b) => a - b);
   const median = scores.length ? scores[Math.floor(scores.length / 2)] : 0;
-  const blurBar = Math.min(60, median * 0.3);
+  const upper = scores.length ? scores[Math.min(scores.length - 1, Math.floor(scores.length * 0.75))] : 0;
+  const blurBar = Math.min(LIMITS.maxBlurBar, upper * 0.3);
   let previousKept = null;
   for (const photo of photos) {
     photo.status = "keep";
@@ -163,7 +184,7 @@ export function judge(photos) {
     }
     previousKept = photo;
   }
-  return { median, blurBar };
+  return { median, upper, blurBar };
 }
 
 /** Group photos into scenes by capture-time gaps. */
@@ -239,7 +260,7 @@ export function buildMetadata({ words, locationKey, people, orientation, colours
   const category = bestCategory ? Number(bestCategory[0]) : 21;
 
   let title = phrase ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : "Photo";
-  if (location) title += ` in ${location.label}`;
+  if (location && location.label) title += ` in ${location.label}`;
   if (title.length > LIMITS.maxTitleChars) title = title.slice(0, LIMITS.maxTitleChars).replace(/\s+\S*$/, "");
 
   return { title, keywords: keywords.slice(0, LIMITS.maxKeywords), category };
