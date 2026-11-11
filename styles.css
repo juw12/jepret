@@ -149,3 +149,13 @@ details h4 { margin: 16px 0 4px; }
   border-radius: 8px; background: var(--paper); }
 .kw-chip { padding: 3px 10px; font-size: 13px; border-radius: 99px; background: var(--card); color: var(--ink); border-color: var(--line); }
 .kw-chip:hover, .kw-chip:focus-visible { border-color: var(--accent); text-decoration: line-through; }
+
+/* Quote maker */
+.gig .cta { flex-wrap: wrap; }
+.quote-maker { margin-top: 18px; border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: var(--paper); scroll-margin-top: 16px; }
+.quote-maker h4 { margin: 0 0 4px; font-size: 17px; }
+.quote-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 10px; }
+.quote-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.quote-fields input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: inherit; min-width: 0; }
+.quote-preview { white-space: pre-line; margin: 12px 0 8px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--card); font-size: 14px; border-radius: 0 8px 8px 0; }
+.quote-maker .secondary { font-size: 14px; padding: 8px 12px; }
