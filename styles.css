@@ -142,3 +142,10 @@ details h4 { margin: 16px 0 4px; }
 .gig .cta { margin-top: auto; }
 .button-link { font-size: 14px; padding: 8px 12px; }
 .gig .secondary { font-size: 14px; padding: 8px 12px; }
+
+/* Keywords as removable chips */
+.kw-field { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+.kw-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; min-height: 44px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--paper); }
+.kw-chip { padding: 3px 10px; font-size: 13px; border-radius: 99px; background: var(--card); color: var(--ink); border-color: var(--line); }
+.kw-chip:hover, .kw-chip:focus-visible { border-color: var(--accent); text-decoration: line-through; }

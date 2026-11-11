@@ -43,6 +43,7 @@ const TEXT = {
     ready: (n) => `${n} photos ready to export.`, needWords: (n) => `${n} scene(s) still need a description.`,
     none: "No JPG photos found there.", kwCount: (n) => `${n} / 49 keywords`,
     earnLink: "Other ways to earn with your camera: local paid jobs ↓",
+    kwAdd: "Add keywords, then press Enter (commas for several)", kwRemove: (w) => `Remove keyword: ${w}`,
     fillWords: "Fill in the words for me", fillAuto: "Do this by itself next time",
     fillNote: "Recognises each scene on this device; photos are not uploaded. The first time it downloads about 90 MB, then it works offline. Check the words: the AI can be wrong.",
     fillLoading: (p) => `Downloading the recogniser… ${p}%`, fillStarting: "Starting the recogniser…",
@@ -56,7 +57,7 @@ const TEXT = {
     shared: (n) => `${n} photos shared with their words inside.`,
     proofs: "Client proofs (watermarked)", proofName: "Name on proofs", proofsDone: (n) => `${n} watermarked proofs ready.`,
     proofMark: "PROOF",
-    uploadNote: "Shutterstock: upload the shared or saved photos and the words are already filled in. Adobe Stock: upload the photos, then the CSV. Automatic upload from a PC: see tools/upload_stock.py in the README.",
+    uploadNote: "Shutterstock: upload the shared or saved photos and the words are already filled in. Adobe Stock: upload the photos, then the CSV. Automatic upload from a PC: see tools/upload_stock.py in the README (not yet tested with a real contributor account).",
   },
   id: {
     eyebrow: "Gratis · open source · foto tetap di komputermu",
@@ -87,6 +88,7 @@ const TEXT = {
     ready: (n) => `${n} foto siap diekspor.`, needWords: (n) => `${n} adegan masih perlu deskripsi.`,
     none: "Tidak ada foto JPG di sana.", kwCount: (n) => `${n} / 49 kata kunci`,
     earnLink: "Cara lain cari uang dengan kameramu: kerja lokal berbayar ↓",
+    kwAdd: "Tambah kata kunci, lalu tekan Enter (pakai koma untuk beberapa)", kwRemove: (w) => `Hapus kata kunci: ${w}`,
     fillWords: "Isikan kata-katanya untukku", fillAuto: "Lakukan otomatis lain kali",
     fillNote: "Mengenali tiap adegan di perangkat ini; foto tidak diunggah. Pertama kali mengunduh sekitar 90 MB, setelah itu bisa offline. Cek kata-katanya: AI bisa salah.",
     fillLoading: (p) => `Mengunduh pengenal gambar… ${p}%`, fillStarting: "Menyiapkan pengenal gambar…",
@@ -100,7 +102,7 @@ const TEXT = {
     shared: (n) => `${n} foto dibagikan dengan kata-katanya di dalam file.`,
     proofs: "Proof klien (ber-watermark)", proofName: "Nama di proof", proofsDone: (n) => `${n} proof ber-watermark siap.`,
     proofMark: "PROOF",
-    uploadNote: "Shutterstock: upload foto yang dibagikan atau disimpan dan kata-katanya sudah terisi. Adobe Stock: upload fotonya, lalu CSV-nya. Upload otomatis dari PC: lihat tools/upload_stock.py di README.",
+    uploadNote: "Shutterstock: upload foto yang dibagikan atau disimpan dan kata-katanya sudah terisi. Adobe Stock: upload fotonya, lalu CSV-nya. Upload otomatis dari PC: lihat tools/upload_stock.py di README (belum dites dengan akun kontributor asli).",
   },
 };
 
@@ -375,8 +377,47 @@ function renderReview() {
     const category = node.querySelector(".category");
     const people = node.querySelector(".people");
     const title = node.querySelector(".title");
-    const keywords = node.querySelector(".keywords");
+    const chips = node.querySelector(".kw-chips");
+    const addKeyword = node.querySelector(".kw-add");
     const count = node.querySelector(".kw-count");
+    addKeyword.placeholder = t("kwAdd");
+    const renderKeywords = () => {
+      chips.replaceChildren();
+      group.keywords.forEach((word, index) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "kw-chip";
+        chip.setAttribute("role", "listitem");
+        chip.setAttribute("aria-label", t("kwRemove", word));
+        chip.title = t("kwRemove", word);
+        chip.textContent = `${word} ×`;
+        chip.addEventListener("click", () => {
+          group.keywords.splice(index, 1);
+          renderKeywords();
+        });
+        chips.appendChild(chip);
+      });
+      count.textContent = t("kwCount", group.keywords.length);
+    };
+    const takeTyped = () => {
+      const typed = addKeyword.value.split(",").map((word) => word.trim().toLowerCase()).filter(Boolean);
+      if (!typed.length) return;
+      typed.forEach((word) => {
+        if (!group.keywords.includes(word) && group.keywords.length < 49) group.keywords.push(word);
+      });
+      addKeyword.value = "";
+      renderKeywords();
+    };
+    addKeyword.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        takeTyped();
+      }
+    });
+    addKeyword.addEventListener("input", () => {
+      if (addKeyword.value.includes(",")) takeTyped();
+    });
+    addKeyword.addEventListener("blur", takeTyped);
 
     Object.entries(LOCATIONS).forEach(([key, value]) => {
       location.add(new Option(value.label || "-", key));
@@ -415,8 +456,7 @@ function renderReview() {
     category.value = String(group.category);
     people.checked = group.people;
     title.value = group.title;
-    keywords.value = group.keywords.join(", ");
-    count.textContent = t("kwCount", group.keywords.length);
+    renderKeywords();
 
     const regenerate = () => {
       group.words = words.value;
@@ -425,9 +465,8 @@ function renderReview() {
       group.people = people.checked;
       refreshMetadata(group);
       title.value = group.title;
-      keywords.value = group.keywords.join(", ");
+      renderKeywords();
       category.value = String(group.category);
-      count.textContent = t("kwCount", group.keywords.length);
       updateExportStatus();
     };
     words.addEventListener("input", regenerate);
@@ -439,10 +478,6 @@ function renderReview() {
     });
     title.addEventListener("input", () => {
       group.title = title.value;
-    });
-    keywords.addEventListener("input", () => {
-      group.keywords = keywords.value.split(",").map((word) => word.trim().toLowerCase()).filter(Boolean).slice(0, 49);
-      count.textContent = t("kwCount", group.keywords.length);
     });
     container.appendChild(node);
   });

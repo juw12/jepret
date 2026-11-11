@@ -137,7 +137,11 @@
       </div>
       <div class="output">
         <label><span data-i18n="title">Title</span><input class="title" type="text" maxlength="70"></label>
-        <label><span data-i18n="keywords">Keywords</span><textarea class="keywords" rows="3"></textarea></label>
+        <div class="kw-field">
+          <span class="kw-label" data-i18n="keywords">Keywords</span>
+          <div class="kw-chips" role="list"></div>
+          <input class="kw-add" type="text" enterkeyhint="done" autocomplete="off">
+        </div>
         <p class="muted kw-count"></p>
       </div>
     </article>
