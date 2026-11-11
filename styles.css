@@ -159,3 +159,32 @@ details h4 { margin: 16px 0 4px; }
 .quote-fields input { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: inherit; min-width: 0; }
 .quote-preview { white-space: pre-line; margin: 12px 0 8px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--card); font-size: 14px; border-radius: 0 8px 8px 0; }
 .quote-maker .secondary { font-size: 14px; padding: 8px 12px; }
+
+/* Sell face to face */
+.onspot { border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; background: var(--paper); margin-top: 12px; }
+.onspot h4 { margin: 0 0 4px; font-size: 18px; }
+.onspot h5 { margin: 14px 0 8px; font-size: 15px; }
+.onspot-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.onspot label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; margin-top: 8px; }
+.onspot input:not([type=file]) { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: inherit; min-width: 0; }
+.onspot-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.onspot-amount { font-size: 22px; font-weight: 700; padding-bottom: 6px; }
+.onspot .cta { flex-wrap: wrap; margin-top: 10px; }
+.onspot-show-sign { margin-top: 12px; }
+.onspot-summary { font-weight: 600; margin: 10px 0 0; }
+.onspot .secondary, .onspot .button-link { font-size: 14px; padding: 8px 12px; }
+.onspot .button-link.disabled { opacity: 0.5; pointer-events: none; }
+.onspot-pitch { margin-top: 14px; }
+.onspot-pitch summary { cursor: pointer; font-weight: 600; }
+.onspot-pitch li { margin: 6px 0; }
+.onspot-sign { position: fixed; inset: 0; z-index: 1000; background: #fff; color: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2vh; padding: 4vh 4vw; text-align: center; overflow: auto; cursor: pointer; }
+.onspot-sign p { margin: 0; }
+.onspot-sign .sign-title { font-size: clamp(28px, 7vw, 64px); font-weight: 800; }
+.onspot-sign .sign-sub { font-size: clamp(16px, 3.6vw, 28px); color: #333; }
+.onspot-sign .sign-price { font-size: clamp(40px, 13vw, 140px); font-weight: 900; color: #b3261e; line-height: 1; white-space: nowrap; }
+.onspot-sign .sign-unit { font-size: 0.4em; font-weight: 700; }
+.onspot [hidden] { display: none !important; }
+.onspot-sign .sign-bundle { font-size: clamp(26px, 7vw, 64px); font-weight: 800; }
+.onspot-sign .sign-qris { max-width: min(70vw, 420px); max-height: 42vh; image-rendering: pixelated; background: #fff; }
+.onspot-sign .sign-name { font-size: clamp(18px, 4vw, 30px); font-weight: 700; }
+.onspot-sign .sign-hint { font-size: 14px; color: #777; }

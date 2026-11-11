@@ -4,6 +4,7 @@ import {
 } from "./core.js";
 import { DICTIONARY, LOCATIONS, SHOT_LIST } from "./vocab.js";
 import { EARN, renderEarn } from "./earn.js";
+import { renderOnSpot } from "./onspot.js";
 
 const SHUTTERSTOCK_BY_ADOBE = {
   1: ["Animals/Wildlife"], 2: ["Buildings/Landmarks"], 3: ["Business/Finance"], 4: ["Food and Drink"],
@@ -122,6 +123,7 @@ function applyLanguage() {
   });
   $("#lang").textContent = state.lang === "en" ? "ID" : "EN";
   $("#earn-title").textContent = EARN[state.lang].title;
+  renderOnSpot($("#onspot"), state.lang);
   renderEarn($("#earn"), state.lang);
   if (state.groups.length) renderReview();
 }
