@@ -2,6 +2,12 @@
 
 **Camera sitting idle? Photos in, stock upload files out.** Free, open source, and your photos never leave your computer.
 
+## On a Mac
+
+- **Mac:** [`Jepret-macOS-AppleSilicon.dmg`](https://github.com/juw12/jepret/releases/download/mac/Jepret-macOS-AppleSilicon.dmg) (M1 and newer) or [`Jepret-macOS-Intel.dmg`](https://github.com/juw12/jepret/releases/download/mac/Jepret-macOS-Intel.dmg). Open it and drag Jepret to Applications. The first time, macOS blocks it because it is not notarized: **System Settings → Privacy & Security → Open Anyway**.
+
+It is the web edition (https://juw12.github.io/jepret/) in its own window ([`desktop/`](desktop/README.md)) and changes with it. Use Choose photos; choosing a whole folder (SD card) may not be offered in this window. Each build is opened on an Apple-silicon Mac and an Intel Mac on GitHub before it is published: the page loads, the app starts and can store data. No Mac of ours has run it yet.
+
 ## Get the app
 
 | Where | How |
