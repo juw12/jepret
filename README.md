@@ -14,7 +14,7 @@
 
 All of them are the same app: after the first open nothing needs the internet, and photos never leave your device.
 
-The Mac and Android apps are the page in its own window ([`desktop/`](desktop/README.md), [`android/`](android/README.md)) and change with it. In them use **Choose photos**; choosing a whole folder (SD card) may not be offered there. Each build is opened on GitHub's machines before it is published (an Apple-silicon Mac and an Intel Mac: the page loads and the app starts; an Android emulator: it installs, opens and stays up). Picking photos and downloading the CSV in them has not been tried yet, and no Mac or phone of ours has run them.
+The Mac and Android apps are the page in its own window ([`desktop/`](desktop/README.md), [`android/`](android/README.md)) and change with it. In them use **Choose photos**; choosing a whole folder (SD card) may not be offered there. Each build is opened on GitHub's machines before it is published (an Apple-silicon Mac and an Intel Mac: the page loads and the app starts; an Android emulator: it installs, opens and stays up). The steps themselves were tried in WebKit, the engine the Mac window uses (four JPEGs chosen with **Choose photos**: three kept, the blurred copy rejected, both CSV files downloaded); nobody has done them by hand inside the two apps yet.
 
 Jepret is for people with a mirrorless or DSLR camera, a full-time job and little time. It does the boring part of selling photos on stock sites:
 
