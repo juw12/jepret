@@ -401,14 +401,17 @@ function renderReview() {
       });
       count.textContent = t("kwCount", group.keywords.length);
     };
-    const takeTyped = () => {
+    const takeTyped = (redrawLater) => {
       const typed = addKeyword.value.split(",").map((word) => word.trim().toLowerCase()).filter(Boolean);
       if (!typed.length) return;
       typed.forEach((word) => {
         if (!group.keywords.includes(word) && group.keywords.length < 49) group.keywords.push(word);
       });
       addKeyword.value = "";
-      renderKeywords();
+      // Leaving the field by pressing a button: the keyword counts at once, the list is redrawn a moment later.
+      // Redrawn at once, the longer list moves the button away from under the pointer and the press is lost.
+      if (redrawLater === true) setTimeout(renderKeywords, 250);
+      else renderKeywords();
     };
     addKeyword.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
@@ -419,7 +422,7 @@ function renderReview() {
     addKeyword.addEventListener("input", () => {
       if (addKeyword.value.includes(",")) takeTyped();
     });
-    addKeyword.addEventListener("blur", takeTyped);
+    addKeyword.addEventListener("blur", () => takeTyped(true));
 
     Object.entries(LOCATIONS).forEach(([key, value]) => {
       location.add(new Option(value.label || "-", key));
