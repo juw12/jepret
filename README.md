@@ -7,10 +7,14 @@
 | Where | How |
 |---|---|
 | **Windows** | Download [**Jepret.exe**](https://github.com/juw12/jepret/releases/latest/download/Jepret.exe) and double-click it. No installer, works offline. Unsigned, so SmartScreen may ask: *More info → Run anyway*. |
-| **Android / phone** | Open https://juw12.github.io/jepret/ in Chrome → menu → *Add to Home screen*. It then opens like an app and works offline. |
+| **Mac** | [`Jepret-macOS-AppleSilicon.dmg`](https://github.com/juw12/jepret/releases/download/mac/Jepret-macOS-AppleSilicon.dmg) (M1 and newer) or [`Jepret-macOS-Intel.dmg`](https://github.com/juw12/jepret/releases/download/mac/Jepret-macOS-Intel.dmg). Drag Jepret to Applications. It is not notarized, so the first time: **System Settings → Privacy & Security → Open Anyway**. |
+| **Android** | [`Jepret-android.apk`](https://github.com/juw12/jepret/releases/download/android/Jepret-android.apk): open the file on the phone and allow your browser to install apps once. Or open https://juw12.github.io/jepret/ in Chrome → menu → *Add to Home screen*. |
+| **iPhone** | Open https://juw12.github.io/jepret/ in Safari → Share → *Add to Home Screen*. It then opens like an app and works offline. |
 | **Any computer** | Open https://juw12.github.io/jepret/ in Chrome or Edge and click **Install app** in the top bar (or just use the page). |
 
-All three are the same app: after the first open nothing needs the internet, and photos never leave your device.
+All of them are the same app: after the first open nothing needs the internet, and photos never leave your device.
+
+The Mac and Android apps are the page in its own window ([`desktop/`](desktop/README.md), [`android/`](android/README.md)) and change with it. In them use **Choose photos**; choosing a whole folder (SD card) may not be offered there. Each build is opened on GitHub's machines before it is published (an Apple-silicon Mac and an Intel Mac: the page loads and the app starts; an Android emulator: it installs, opens and stays up). Picking photos and downloading the CSV in them has not been tried yet, and no Mac or phone of ours has run them.
 
 Jepret is for people with a mirrorless or DSLR camera, a full-time job and little time. It does the boring part of selling photos on stock sites:
 
