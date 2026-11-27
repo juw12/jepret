@@ -10,15 +10,15 @@
   "Brachydiplax_chalybea_female_06685.jpg": [
    [
     "dragonfly",
-    0.781
+    0.786
    ],
    [
     "insect",
-    0.117
+    0.11
    ],
    [
     "caterpillar",
-    0.032
+    0.033
    ],
    [
     "damselfly",
@@ -26,29 +26,29 @@
    ],
    [
     "fly",
-    0.015
+    0.017
    ]
   ],
   "Butterfly_pea_%28_Centrosema_pubescens%2901569.jpg": [
    [
     "flower",
-    0.313
+    0.335
    ],
    [
     "plant",
-    0.267
+    0.263
    ],
    [
     "garden",
-    0.054
+    0.053
    ],
    [
     "caterpillar",
-    0.044
+    0.041
    ],
    [
     "butterfly",
-    0.035
+    0.033
    ]
   ]
  }
